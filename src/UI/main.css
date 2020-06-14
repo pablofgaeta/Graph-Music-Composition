@@ -1,0 +1,11 @@
+input {
+    position: fixed;
+    text-align: center;
+    left: 5%;
+    right: 5%;
+    top : 40%;
+    width: 90%;
+    height: 80px;
+    vertical-align: center;
+    font-size : 60px;
+}
