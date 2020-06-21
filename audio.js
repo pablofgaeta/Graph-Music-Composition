@@ -13,7 +13,7 @@ function apply_notes(relativedict, base_frequency, type='just') {
 function defaultSynth() {
     return new Tone.PolySynth(2, Tone.AMSynth, {
         modulation : {
-            type : 'square'
+            type : 'sine'
         }
     }).toMaster();
 }
@@ -30,14 +30,10 @@ var notes = {
     length : '16n'
 };
 
-// document.getElementById('vol').oninput = function() {
-//     synth.volume.value = parseFloat(this.value);
-// }
-
 
 document.onkeydown = function(event) {
 
-    event.preventDefault();
+    // event.preventDefault();
     if (event.repeat) return;
     if (notes.freq.hasOwnProperty(event.key)) {
         synth.triggerAttackRelease(notes.freq[event.key], notes.length);
