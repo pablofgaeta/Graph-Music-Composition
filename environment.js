@@ -1,6 +1,6 @@
 class Node {
-    constructor(obj, parents=[], children=[]) {
-        this.obj = obj;
+    constructor(position, parents=[], children=[]) {
+        this.position = position;
         this.parents = parents;
         this.children = children;
     }
@@ -23,10 +23,8 @@ class Node {
         }
     }
 
-    toString() {
-        return '\tObject   : ' + this.obj.toString() + '\n' +
-               '\tParents  : ' + this.parents.toString() + '\n' +
-               '\tChildren : ' + this.children.toString();
+    hasChild(node) {
+        return this.children.includes(node);
     }
 }
 
