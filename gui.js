@@ -29,6 +29,7 @@ graphicscontrollers.push(graphSpecs.add(graphicsSettings, 'canvasHeight', 100, 1
 var nodeSpecs = graphSpecs.addFolder('Node Specs');
 graphicscontrollers.push(nodeSpecs.add(graphicsSettings, 'radius', 1, 100));
 graphicscontrollers.push(nodeSpecs.add(graphicsSettings, 'edgeWidth', 1, 10));
+graphicscontrollers.push(nodeSpecs.add(graphicsSettings, 'arrowLength', 5, 40));
 graphicscontrollers.push(nodeSpecs.add(graphicsSettings, 'selectedWidth', 1, 20));
 graphicscontrollers.push(nodeSpecs.addColor(graphicsSettings, 'circleColor'));
 
