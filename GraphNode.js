@@ -1,4 +1,4 @@
-class Node {
+class GraphNode {
     constructor(position, parents=[], children=[]) {
         this.position = position;
         this.parents = parents;
@@ -6,7 +6,7 @@ class Node {
     }
 
     addParent(node) {
-        if (node instanceof Node) {
+        if (node instanceof GraphNode) {
             this.parents.push(node);
         }
         else {
@@ -15,8 +15,8 @@ class Node {
     }
 
     addChild(node) {
-        if (node instanceof Node) {
-            this.children.push(node);
+        if (node instanceof GraphNode) {
+            if (!this.hasChild(node)) this.children.push(node);
         }
         else {
             throw "Must be instance of \'Node\' Class";
@@ -26,9 +26,8 @@ class Node {
     hasChild(node) {
         return this.children.includes(node);
     }
-}
 
-var environment = {
-    nodes : [],
-    addNode : function (node) { this.nodes.push(node); }
+    hash() {
+        return this.position.x.toString() + this.position.y.toString();
+    }
 }

@@ -1,3 +1,5 @@
+// GUI BAR
+
 var gui = new dat.GUI();
 var add_button = {new_instrument : newInstrumentControls};
 var folders = [];
@@ -15,3 +17,5 @@ function newInstrumentControls() {
     folders[folders.length - 1].add(choices, 'number');
     folders[folders.length - 1].add(choices, 'b00l');
 }
+
+

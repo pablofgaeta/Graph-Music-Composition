@@ -32,7 +32,6 @@ var notes = {
 
 
 document.onkeydown = function(event) {
-
     // event.preventDefault();
     if (event.repeat) return;
     if (notes.freq.hasOwnProperty(event.key)) {
