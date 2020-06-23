@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Graph-Music-Composition</title>
+        <style>
+</style>
+        
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item { list-style-type: none; } .task-list-item-checkbox { margin-left: -20px; vertical-align: middle; }
+</style>
+        
+        
+        
+    </head>
+    <body class="vscode-light">
+        <h1 id="graph-music-composition">Graph-Music-Composition</h1>
+<p>Utilizes directed graph traversals (and other graph theory) to present a visual algorithmic approach to composition.
+All graphics are drawn in Vanilla JS using basic rendering on a Canvas Element</p>
+<h2 id="how-to-use">How To Use</h2>
+<ul>
+<li>A section is started by triggering a node, the rest is automatic through graph traversal</li>
+</ul>
+<h2 id="files">Files</h2>
+<ul>
+<li>Graph.js</li>
+<li>GraphCompositionInterface.js : Graphics and user event handling singleton</li>
+<li>Audio.js                     : Audio engine for individual instruments</li>
+</ul>
+<h2 id="plans">PLANS</h2>
+<ul>
+<li>✅ - Graph/Node classes</li>
+<li>✅ (mostly) - Design Graph Visualization</li>
+<li>Graph traversal algorithms</li>
+<li>Timed traversal events</li>
+<li>Design each instrument with dat.gui
+<ul>
+<li>[Synth vs. sample]</li>
+<li>Synth FX : timbre/adsr/effects/FM or AM Algorithms</li>
+<li>Sample FX : playback rate/effects</li>
+<li>Dynamic FX over time or algorithmically for an instrument</li>
+</ul>
+</li>
+<li>Associate each node (single voice) with registered instrument</li>
+<li>Node frequency control
+<ul>
+<li>relative</li>
+<li>just-tuned</li>
+<li>sample playback manipulation</li>
+</ul>
+</li>
+<li>Symbolic triggers for separate connected components
+<ul>
+<li>This would help keep sections brief and discrete while still being able to communicate</li>
+</ul>
+</li>
+</ul>
+<h2 id="nodes">Nodes</h2>
+<ul>
+<li>Associated with a specific synth or instrument
+or</li>
+<li>Symbolic trigger to a different node</li>
+</ul>
+<h2 id="connected-components">Connected Components</h2>
+<ul>
+<li>Discrete sections of composition</li>
+<li>Symbolic triggers can connect different sections</li>
+</ul>
+<h2 id="edges">Edges</h2>
+<ul>
+<li>Represent a dependence relationship between nodes</li>
+<li>This relationship may be a delayed play signal or effect chain.</li>
+</ul>
+<h2 id="cycles">Cycles</h2>
+<ul>
+<li>Once entered, creates an infinite loop that must be manually paused</li>
+<li>Combined with a delay, a graph cycle can mimic a traditional looping mechanism</li>
+</ul>
+
+    </body>
+    </html>
