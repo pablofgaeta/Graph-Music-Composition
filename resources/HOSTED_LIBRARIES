@@ -1,0 +1,3 @@
+<script src="https://cdn.jsdelivr.net/npm/p5@1.0.0/lib/p5.js"></script>
+<script src='https://unpkg.com/tone@13.8.25/build/Tone.js'></script>
+<script src='https://raw.githubusercontent.com/dataarts/dat.gui/master/build/dat.gui.min.js'></script>

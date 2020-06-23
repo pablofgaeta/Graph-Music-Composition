@@ -1,31 +1,24 @@
 <!doctype HTML>
 <html>
   <head>
-    <meta charset="UTF-8">
+    <!-- <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1"> -->
   
     <title>Graph Music Composition</title>
+    <link rel='stylesheet' href='main.css'></link>
 
+    <!-- LIBRARIES -->
     <script src='resources/Tone.js'></script>
     <script src='resources/dat.gui.min.js'></script>
-    <!-- <script src="https://cdn.jsdelivr.net/npm/p5@1.0.0/lib/p5.js"></script>
-    <script src='https://unpkg.com/tone@13.8.25/build/Tone.js'></script>
-    <script src='https://raw.githubusercontent.com/dataarts/dat.gui/master/build/dat.gui.min.js'></script> -->
 
-
-    <style>
-      body {
-        margin : 0;
-        padding : 0;
-      }
-    </style>
   </head>
+
   <body>
-    <canvas id="myCanvas" width="100vw" height="100vh" style='background:pink;'></canvas>
-     <script src='GraphNode.js'></script>
-     <script src='visuals.js'></script>
-     <script src='gui.js'></script>
-     <script src='audio.js'></script>
- </body>
+    <!-- SCRIPTS -->
+    <script src='Graph.js'></script>
+    <script src='GraphCompositionInterface.js'></script>
+    <script src='gui.js'></script>
+  </body>
+  
 </html>
