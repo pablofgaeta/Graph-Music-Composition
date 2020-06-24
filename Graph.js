@@ -53,16 +53,18 @@ class Graph {
         this.context = this.canvas.getContext("2d");
 
         this.specs = {
-            background : '#fdfd96',
+            background : '#848484',
             canvasWidth : window.innerWidth,
             canvasHeight : window.innerHeight,
-            radius : 25,
-            edgeWidth : 8, 
+            radius : 39,
+            edgeWidth : 8.5,
+            edgeColor : '#000000',
             arrowLength : 20,
-            selectedWidth : 8,
-            circleColor : '#96a2fd',
-            idColor : '#ffffff',
-            idFontSize : 30,
+            selectionWidth : 15,
+            selectionColor : '#6969fa',
+            circleColor : '#f0fd96',
+            idColor : '#000000',
+            idFontSize : 60,
             idFont : 'Arial'
         }
 
@@ -104,13 +106,6 @@ class Graph {
 
         this.nodehash = {};
 
-        // Draw each node
-        var count = 0;
-        for (var node of this.nodes) {
-            this.draw_node(node, count++);
-            this.nodehash[node.hash()] = node;
-        }
-
         var edge_pairs = {};
 
         // Draw all edges between nodes
@@ -123,6 +118,13 @@ class Graph {
                 }
                 this.draw_arrow(node.position, child.position);
             }
+        }
+
+        // Draw each node
+        var count = 0;
+        for (var node of this.nodes) {
+            this.draw_node(node, count++);
+            this.nodehash[node.hash()] = node;
         }
     }
 
@@ -140,7 +142,8 @@ class Graph {
         this.context.arc(x, y, this.specs.radius, 0, 2 * Math.PI);
         this.context.fillStyle = this.specs.circleColor;
         if (node.selected) {
-            this.context.lineWidth = this.specs.selectedWidth; 
+            this.context.strokeStyle = this.specs.selectionColor;
+            this.context.lineWidth = this.specs.selectionWidth; 
             this.context.stroke();
         }
         this.context.fill();
@@ -161,11 +164,12 @@ class Graph {
         this.draw_line(chopped_coords[0], mouse_coord);
     }
     
-    draw_line(coord1, coord2, width=this.specs.edgeWidth) {
+    draw_line(coord1, coord2, width=this.specs.edgeWidth, color=this.specs.edgeColor) {
         this.context.beginPath();
         this.context.moveTo(coord1.x, coord1.y);
         this.context.lineTo(coord2.x, coord2.y);
-        this.context.lineWidth = width; 
+        this.context.lineWidth = width;
+        this.context.strokeStyle = color;
         this.context.stroke();
     }
 
@@ -185,10 +189,10 @@ class Graph {
             y : Math.max(coord1.y, coord2.y)
         }
 
-        this.draw_line(tleft, { x : bright.x, y : tleft.y },width);
-        this.draw_line({ x : bright.x, y : tleft.y }, bright,width);
-        this.draw_line(bright, { x : tleft.x, y : bright.y },width);
-        this.draw_line({ x : tleft.x, y : bright.y }, tleft,width);
+        this.draw_line(tleft, { x : bright.x, y : tleft.y }, width,this.specs.selectionColor);
+        this.draw_line({ x : bright.x, y : tleft.y }, bright, width, this.specs.selectionColor);
+        this.draw_line(bright, { x : tleft.x, y : bright.y }, width, this.specs.selectionColor);
+        this.draw_line({ x : tleft.x, y : bright.y }, tleft, width, this.specs.selectionColor);
     }
 
     select_in_rect(coord1, coord2) {
