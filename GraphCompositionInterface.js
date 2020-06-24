@@ -1,154 +1,160 @@
-var gui = new dat.GUI();
 
 // Singleton to control the state of the Application
-let GraphCompositionInterface = (function() {
-    let environment = new Graph();
-    
-    let mouse_down  = false;
-    let start_node  = null;
+(function() {
+    let environment = new VizGraph();
+    let gui = new dat.GUI();
 
-    let multiSelect = false;
+
+    /********* STATE CONTROLLER *************/
+    
+    // State of mousePress
+    let mouse_down  = false;
+
+    // Parent node when attempting to create new edge
+    let parent_node  = null;
+
+    // Selection variables
+    let move_selection = false;
+    let multi_selection = false;
     let selectionStart = null;
     let selectionEnd = null;
 
-    function special(mouseEvent)                     { return mouseEvent.shiftKey || mouseEvent.metaKey || mouseEvent.ctrlKey || mouseEvent.altKey; }
-    function create_edge(mouseEvent)                 { return mouseEvent.shiftKey; }
-    function create_node(mouseEvent)                 { return mouseEvent.metaKey;  }
-    function create_selection(mouseEvent)            { return mouseEvent.altKey;   }
-    function is_dragging()                           { return mouse_down && start_node; }
-    function can_finish_edge(mouseEvent, end_node)   { return is_dragging() && end_node && create_edge(mouseEvent) && start_node != end_node;}
+    // Lambda functions for getting states of the interface
+    let special = (mouseEvent) => mouseEvent.shiftKey || mouseEvent.metaKey || mouseEvent.ctrlKey || mouseEvent.altKey;
+    let edge_mode = (mouseEvent) => mouseEvent.shiftKey; 
+    let node_mode = (mouseEvent) => mouseEvent.metaKey;
+    let extend_selection_mode = (mouseEvent) => mouseEvent.altKey;
+    let creating_edge = () => mouse_down && parent_node;
+    let can_finish_edge = (end_node) => creating_edge() && end_node && parent_node != end_node;
 
-    window.onresize    = window.onload = () => { environment.set_canvas();  };
+    // Initialize canvas when loaded or resized
+    window.onresize = window.onload = () => { environment.update_canvas();  };
 
     environment.canvas.onmousedown = (event) => {
-        var mouse = {
+        let mouse = {
             x : event.clientX + window.pageXOffset, 
             y : event.clientY + window.pageYOffset
         };
-        var existing_node = environment.hovering(mouse);
+        mouse_down = true;
 
-        if (create_selection(event)) {
-            multiSelect = true;
+        let existing_node = environment.hovering(mouse, 1);
+
+        // HANDLE DRAG INSTRUCTIONS
+        if (!special(event)) {
             selectionStart = mouse;
+            // HANDLE VALID SELECTION
+            if (existing_node) {
+                move_selection = true;
+                if (!multi_selection) {
+                    environment.clear_selections();
+                    existing_node.selected = true;
+                }
+            }
+            // RESET SELECTION STATE
+            else {
+                environment.clear_selections();
+                multi_selection = false;
+            }
         }
-        else {
-            environment.clear_selections();
+        else if (extend_selection_mode(event) && existing_node) {
+            existing_node.toggle_selected();
         }
-        
         // REGISTER SELECTED STARTING NODE
-        if (existing_node) {
-            mouse_down = true;
-            start_node = existing_node;
-            existing_node.selected = true;
+        else if (edge_mode(event) && existing_node) {
+            parent_node = existing_node;
         }
         // IF IN CREATE MODE, CREATE NEW NODE
-        else if (create_node(event)){
-            environment.add_node(new GraphNode(mouse));
+        else if (node_mode(event)){
+            environment.create_node(mouse);
             environment.draw_graph();
         }
     }
 
     environment.canvas.onmousemove = (event) => {
-        var mouse = {
+        let mouse = {
             x : event.clientX + window.pageXOffset, 
             y : event.clientY + window.pageYOffset
         };
 
-        // IF REGISTERED DRAG
-        if (is_dragging()) { 
-            // MOVE NODE IF NO SPECIAL KEYS PRESSED
-            if (!special(event)) {
-                start_node.position = mouse;
-            } 
+        // IF REGISTERED EDGE DRAG
+        if (creating_edge()) {
             environment.draw_graph();
 
-            var hover_other = environment.hovering(mouse, 1, start_node);
-            var hover_self  = start_node.is_hovering(mouse, environment.specs.radius);
+            let hover_other = environment.hovering(mouse, 1, parent_node);
+            let hover_self  = parent_node.is_hovering(mouse, environment.specs.radius);
 
             // DRAW TEMPORARY EDGE LINE IF IN EDGE MODE AND NOT OVER SELF
-            if (create_edge(event) && !hover_self) {
+            if (edge_mode(event) && !hover_self) {
                 if (hover_other) { 
-                    environment.draw_edge(start_node.position, hover_other.position); 
+                    environment.draw_edge(parent_node.position, hover_other.position); 
                 }
-                else { environment.draw_moving_edge(start_node.position, mouse); }
+                else { environment.draw_moving_edge(parent_node.position, mouse); }
             }
         }
-        if (multiSelect) {
+
+        // First check if should move selection
+        else if (move_selection && mouse_down) {
+            environment.move_selected({x : event.movementX, y : event.movementY});
+            environment.draw_graph();
+        }
+        // Now check if creating multi-selection box
+        else if (!special(event) && mouse_down) {
             selectionEnd = mouse;
+            multi_selection = true;
+            environment.select_in_rect(selectionStart, selectionEnd);
             environment.draw_graph();
             environment.draw_rect(selectionStart, selectionEnd);
         }
     }
 
     environment.canvas.onmouseup = (event) => {
-        var mouse = {
+        let mouse = {
             x : event.clientX + window.pageXOffset, 
             y : event.clientY + window.pageYOffset
         };
-        var existing_node = environment.hovering(mouse);
-    
-        if (multiSelect) {
-            selectionEnd = mouse;
-            environment.select_in_rect(selectionStart, selectionEnd);
-            multiSelect = false;
-        }
+        
+        let existing_node = environment.hovering(mouse, 1);
 
         // IF CONNECTED EDGE TO EDGE, CREATE CONNECTION
-        if (can_finish_edge(event, existing_node))
-            start_node.add_child(existing_node);
+        if (can_finish_edge(existing_node)) {
+            parent_node.add_child(existing_node);
+        }
     
         // Ensure Graph state resets to idle state
+        move_selection = false;
         mouse_down = false;
-        start_node = null;
+        parent_node = null;
         environment.draw_graph();
     };
+
+    let graphicsSettings = environment.specs;
+    let graphicscontrollers = [];
+
+    let graphSpecs = gui.addFolder('Graphics Specs');
+    graphicscontrollers.push(graphSpecs.addColor(graphicsSettings, 'background'));
+    graphicscontrollers.push(graphSpecs.add(graphicsSettings, 'widthScale', 1, 20));
+    graphicscontrollers.push(graphSpecs.add(graphicsSettings, 'heightScale', 1, 20));
+
+    let nodeSpecs = graphSpecs.addFolder('Node Specs');
+    graphicscontrollers.push(nodeSpecs.add(graphicsSettings, 'radius', 1, 100));
+    graphicscontrollers.push(nodeSpecs.add(graphicsSettings, 'edgeWidth', 1, 10));
+    graphicscontrollers.push(nodeSpecs.addColor(graphicsSettings, 'edgeColor'));
+    graphicscontrollers.push(nodeSpecs.add(graphicsSettings, 'arrowLength', 5, 40));
+    graphicscontrollers.push(nodeSpecs.add(graphicsSettings, 'selectionWidth', 1, 20));
+    graphicscontrollers.push(nodeSpecs.addColor(graphicsSettings, 'selectionColor'));
+    graphicscontrollers.push(nodeSpecs.addColor(graphicsSettings, 'circleColor'));
+
+
+    let idSpecs = graphSpecs.addFolder('ID text Specs');
+    graphicscontrollers.push(idSpecs.add(graphicsSettings, 'idFont'));
+    graphicscontrollers.push(idSpecs.add(graphicsSettings, 'idFontSize', 5, 80));
+    graphicscontrollers.push(idSpecs.addColor(graphicsSettings, 'idColor'));
+
+    for (let ctrlr of graphicscontrollers) {
+        ctrlr.onChange(() => environment.update_canvas());
+    }
+
+    gui.remember(graphicsSettings);
     
     return environment;
 })();
-
-
-// var add_button = {new_instrument : newInstrumentControls};
-// var folders = [];
-
-// var InstrumentChoices = function() {
-//     this.number = 50;
-//     this.b00l   = false;
-// };
-
-// gui.add(add_button, 'new_instrument').name('Create Instrument');
-
-// function newInstrumentControls() {
-//     var choices = new InstrumentChoices();
-//     folders.push( gui.addFolder('Voice ' + folders.length) );
-//     folders[folders.length - 1].add(choices, 'number');
-//     folders[folders.length - 1].add(choices, 'b00l');
-// }
-
-var graphicsSettings = GraphCompositionInterface.specs;
-var graphicscontrollers = [];
-
-var graphSpecs = gui.addFolder('Graphics Specs');
-graphicscontrollers.push(graphSpecs.addColor(graphicsSettings, 'background'));
-graphicscontrollers.push(graphSpecs.add(graphicsSettings, 'canvasWidth', 100, 10000));
-graphicscontrollers.push(graphSpecs.add(graphicsSettings, 'canvasHeight', 100, 10000));
-
-var nodeSpecs = graphSpecs.addFolder('Node Specs');
-graphicscontrollers.push(nodeSpecs.add(graphicsSettings, 'radius', 1, 100));
-graphicscontrollers.push(nodeSpecs.add(graphicsSettings, 'edgeWidth', 1, 10));
-graphicscontrollers.push(nodeSpecs.addColor(graphicsSettings, 'edgeColor'));
-graphicscontrollers.push(nodeSpecs.add(graphicsSettings, 'arrowLength', 5, 40));
-graphicscontrollers.push(nodeSpecs.add(graphicsSettings, 'selectionWidth', 1, 20));
-graphicscontrollers.push(nodeSpecs.addColor(graphicsSettings, 'selectionColor'));
-graphicscontrollers.push(nodeSpecs.addColor(graphicsSettings, 'circleColor'));
-
-
-var idSpecs = graphSpecs.addFolder('ID text Specs');
-graphicscontrollers.push(idSpecs.add(graphicsSettings, 'idFont'));
-graphicscontrollers.push(idSpecs.add(graphicsSettings, 'idFontSize', 5, 80));
-graphicscontrollers.push(idSpecs.addColor(graphicsSettings, 'idColor'));
-
-for (var ctrlr of graphicscontrollers) {
-    ctrlr.onChange(() => GraphCompositionInterface.set_canvas());
-}
-
-gui.remember(graphicsSettings);

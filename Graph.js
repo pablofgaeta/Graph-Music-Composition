@@ -1,27 +1,17 @@
-class GraphNode {
-    constructor(position, parents=[], children=[]) {
+class VizGraphNode {
+    constructor(position) {
         this.position = position;
-        this.parents = parents;
-        this.children = children;
+        this.parents = [];
+        this.children = [];
         this.selected = false;
     }
 
     add_parent(node) {
-        if (node instanceof GraphNode) {
-            this.parents.push(node);
-        }
-        else {
-            throw "Must be instance of \'Node\' Class";
-        }
+        this.parents.push(node);
     }
 
     add_child(node) {
-        if (node instanceof GraphNode) {
-            if (!this.has_child(node)) this.children.push(node);
-        }
-        else {
-            throw "Must be instance of \'Node\' Class";
-        }
+        if (!this.has_child(node)) this.children.push(node);
     }
 
     has_child(node) {
@@ -29,9 +19,13 @@ class GraphNode {
     }
 
     is_hovering(coord, radius) {
-        var x = this.position.x - coord.x;
-        var y = this.position.y - coord.y;
+        let x = this.position.x - coord.x;
+        let y = this.position.y - coord.y;
         return Math.hypot(x,y) <= radius;
+    }
+
+    toggle_selected() {
+        this.selected = !this.selected;
     }
 
     // At any given moment, every node should have different x,y coordinate
@@ -41,21 +35,19 @@ class GraphNode {
     }
 }
 
-class Graph {
+
+class VizGraph {
     constructor() {
         this.nodes = [];
-        this.last_selected = null;
-        this.nodehash = {};
 
         this.canvas = document.createElement('canvas');
         document.body.appendChild(this.canvas);
-        this.canvas.id = 'App';
         this.context = this.canvas.getContext("2d");
 
         this.specs = {
             background : '#848484',
-            canvasWidth : window.innerWidth,
-            canvasHeight : window.innerHeight,
+            widthScale : 1,
+            heightScale : 1,
             radius : 39,
             edgeWidth : 8.5,
             edgeColor : '#000000',
@@ -68,29 +60,34 @@ class Graph {
             idFont : 'Arial'
         }
 
-        this.set_canvas();
+        this.update_canvas();
     }
 
-    set_canvas() {
+    has_selected() {
+        this.nodes.forEach(node => { if (node.selected) return true; });
+        return false;
+    }
+
+    update_canvas() {
         this.canvas.style.background = this.specs.background;
-        this.canvas.width  = this.specs.canvasWidth.toString();
-        this.canvas.height = this.specs.canvasHeight.toString();
+        this.canvas.width  = (window.innerWidth * this.specs.widthScale).toString();
+        this.canvas.height = (window.innerHeight * this.specs.heightScale).toString();
         this.draw_graph();
     }
 
 
-    add_node(node) {
-        this.nodes.push(node);
+    create_node(coord) {
+        this.nodes.push(new VizGraphNode(coord));
     }
 
     /**
      *  Returns the first node that contains the given coordinate
      *  Return null if no nodes contain 'coord'
      *  @param {*}         coord - {x : Number, y : Number} coordinate to compare
-     *  @param {GraphNode} node  - {GraphNode} Optionally specify single node to ignore
+     *  @param {VizGraphNode} node  - {VizGraphNode} Optionally specify single node to ignore
      */ 
     hovering(coord, scale=2, ignore_node=null) {
-        for (var node of this.nodes) {
+        for (let node of this.nodes) {
             if (node == ignore_node) continue;
             if (node.is_hovering(coord, this.specs.radius * scale)) {
                 return node;
@@ -104,13 +101,11 @@ class Graph {
         // Clear canvas first
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        this.nodehash = {};
-
-        var edge_pairs = {};
+        let edge_pairs = {};
 
         // Draw all edges between nodes
-        for (var node of this.nodes) {
-            for (var child of node.children) {
+        for (let node of this.nodes) {
+            for (let child of node.children) {
                 // Make sure not to duplicate drawing an edge
                 if (!edge_pairs.hasOwnProperty(child.hash() + '->' + node.hash())) {
                     this.draw_edge(node.position, child.position);
@@ -121,22 +116,21 @@ class Graph {
         }
 
         // Draw each node
-        var count = 0;
-        for (var node of this.nodes) {
+        let count = 0;
+        for (let node of this.nodes) {
             this.draw_node(node, count++);
-            this.nodehash[node.hash()] = node;
         }
     }
 
     draw_arrow(coord1, coord2) {
-        var points = this.calculate_arrows(coord1, coord2);
+        let points = this.calculate_arrows(coord1, coord2);
         this.draw_line(points.start, points.ends[0], this.specs.edgeWidth / 2);
         this.draw_line(points.start, points.ends[1], this.specs.edgeWidth / 2);
     }
 
     draw_node(node, id) {
-        var x = node.position.x; 
-        var y = node.position.y;
+        let x = node.position.x; 
+        let y = node.position.y;
 
         this.context.beginPath();
         this.context.arc(x, y, this.specs.radius, 0, 2 * Math.PI);
@@ -155,12 +149,12 @@ class Graph {
     }
 
     draw_edge(coord1, coord2) {
-        var chopped_coords = this.calculate_edge_pair(coord1, coord2);
+        let chopped_coords = this.calculate_edge_pair(coord1, coord2);
         this.draw_line(chopped_coords[0], chopped_coords[1]);
     }
     
     draw_moving_edge(node_coord, mouse_coord) {
-        var chopped_coords = this.calculate_edge_pair(node_coord, mouse_coord);
+        let chopped_coords = this.calculate_edge_pair(node_coord, mouse_coord);
         this.draw_line(chopped_coords[0], mouse_coord);
     }
     
@@ -174,17 +168,17 @@ class Graph {
     }
 
     clear_selections() {
-        for (var node of this.nodes) {
+        for (let node of this.nodes) {
             node.selected = false;
         }
     }
 
     draw_rect(coord1, coord2, width=this.specs.edgeWidth/3) {
-        var tleft = {
+        let tleft = {
             x : Math.min(coord1.x, coord2.x),
             y : Math.min(coord1.y, coord2.y)
         }
-        var bright = {
+        let bright = {
             x : Math.max(coord1.x, coord2.x),
             y : Math.max(coord1.y, coord2.y)
         }
@@ -195,41 +189,53 @@ class Graph {
         this.draw_line({ x : tleft.x, y : bright.y }, tleft, width, this.specs.selectionColor);
     }
 
+    move_selected(deltaCoord) {
+        this.nodes.forEach(node => {
+            if (node.selected) {
+                node.position.x += deltaCoord.x;
+                node.position.y += deltaCoord.y;
+            }
+        });
+    }
+
     select_in_rect(coord1, coord2) {
-        var tleft = {
+        let tleft = {
             x : Math.min(coord1.x, coord2.x),
             y : Math.min(coord1.y, coord2.y)
         }
-        var bright = {
+        let bright = {
             x : Math.max(coord1.x, coord2.x),
             y : Math.max(coord1.y, coord2.y)
         }
 
-        for (var node of this.nodes) {
-            var pos = node.position;
+        for (let node of this.nodes) {
+            let pos = node.position;
             if (pos.x >= tleft.x && pos.x <= bright.x &&
                 pos.y >= tleft.y && pos.y <= bright.y) {
                     node.selected = true;
+            }
+            else {
+                node.selected = false;
             }
         }
     }
 
     march_towards(coord1, coord2) {
-        var chopped_coords = this.calculate_edge_pair(coord1, coord2);
-        var theta = chopped_coords[2];
+        let chopped_coords = this.calculate_edge_pair(coord1, coord2);
+        let theta = chopped_coords[2];
 
-        var prev_coord = {
+        let prev_coord = {
             x : chopped_coords[0].x - 0.01 * Math.cos(theta),
             y : chopped_coords[0].y - 0.01 * Math.sin(theta)
         };
 
-        var isclose = (c1, c2, tol=0.1) => {
+        let isclose = (c1, c2, tol=0.1) => {
             return Math.abs(c2.x - c1.x) < tol && Math.abs(c2.y - c1.y) < tol;
         }
         
-        var count = 0;
+        let count = 0;
         while (count < 0 && !isclose(prev_coord, coord2) && !this.hovering(prev_coord, 1)) {
-            var iter_coord = {
+            let iter_coord = {
                 x : prev_coord.x - 0.01 * Math.cos(theta),
                 y : prev_coord.y - 0.01 * Math.sin(theta)
             };
@@ -240,19 +246,19 @@ class Graph {
     }
     
     calculate_arrows(coord1, coord2) {
-        var chopped_coords = this.calculate_edge_pair(coord1, coord2);
+        let chopped_coords = this.calculate_edge_pair(coord1, coord2);
 
-        var x1 = chopped_coords[0].x; var x2 = chopped_coords[1].x;
-        var y1 = chopped_coords[0].y; var y2 = chopped_coords[1].y;
+        let x1 = chopped_coords[0].x; let x2 = chopped_coords[1].x;
+        let y1 = chopped_coords[0].y; let y2 = chopped_coords[1].y;
     
-        var length = Math.hypot(x2 - x1, y2 - y1) / 3;
+        let length = Math.hypot(x2 - x1, y2 - y1) / 3;
     
-        var start_point = {theta : null, x : null, y : null};
+        let start_point = {theta : null, x : null, y : null};
         start_point.theta = x1 == x2 ? Math.PI / 2 * (y2 < y1 ? 1 : -1) : Math.atan2((y1-y2) , (x1 - x2));
         start_point.x = x1 - length * Math.cos(start_point.theta);
         start_point.y = y1 - length * Math.sin(start_point.theta);
 
-        var end_points = [{ x : start_point.x + this.specs.arrowLength * Math.cos(start_point.theta + Math.PI/4),
+        let end_points = [{ x : start_point.x + this.specs.arrowLength * Math.cos(start_point.theta + Math.PI/4),
                         y : start_point.y + this.specs.arrowLength * Math.sin(start_point.theta + Math.PI/4) },
                       { x : start_point.x + this.specs.arrowLength * Math.cos(start_point.theta - Math.PI/4),
                         y : start_point.y + this.specs.arrowLength * Math.sin(start_point.theta - Math.PI/4) }];
@@ -260,11 +266,11 @@ class Graph {
     }
 
     calculate_edge_pair(coord1, coord2) {
-        var x1 = coord1.x; var x2 = coord2.x;
-        var y1 = coord1.y; var y2 = coord2.y;
+        let x1 = coord1.x; let x2 = coord2.x;
+        let y1 = coord1.y; let y2 = coord2.y;
     
-        var theta = x1 == x2 ? Math.PI / 2 * (y2 < y1 ? 1 : -1) : Math.atan2((y1-y2) , (x1 - x2));
-        var result = [{x : null, y : null}, {x : null, y : null}, theta];
+        let theta = x1 == x2 ? Math.PI / 2 * (y2 < y1 ? 1 : -1) : Math.atan2((y1-y2) , (x1 - x2));
+        let result = [{x : null, y : null}, {x : null, y : null}, theta];
 
         result[0].x = x1 - this.specs.radius * Math.cos(theta);
         result[0].y = y1 - this.specs.radius * Math.sin(theta);
