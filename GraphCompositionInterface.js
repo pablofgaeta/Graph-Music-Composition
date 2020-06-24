@@ -1,7 +1,7 @@
 
 // Singleton to control the state of the Application
 (function() {
-    let environment = new VizGraph();
+    let environment = new Graphics();
     let gui = new dat.GUI();
 
 
@@ -46,13 +46,13 @@
             if (existing_node) {
                 move_selection = true;
                 if (!multi_selection) {
-                    environment.clear_selections();
-                    existing_node.selected = true;
+                    environment.graph.clear_selections();
+                    existing_node.select();
                 }
             }
             // RESET SELECTION STATE
             else {
-                environment.clear_selections();
+                environment.graph.clear_selections();
                 multi_selection = false;
             }
         }
@@ -65,7 +65,7 @@
         }
         // IF IN CREATE MODE, CREATE NEW NODE
         else if (node_mode(event)){
-            environment.create_node(mouse);
+            environment.graph.create_node(mouse);
             environment.draw_graph();
         }
     }
