@@ -1,4 +1,4 @@
-let VizGraphNode = function(position) {
+let GraphAudioNode = function(position) {
     this.parents = [];
     this.children = [];
     this.position = position;
@@ -18,25 +18,51 @@ let VizGraphNode = function(position) {
     this.hash = function() { return this.position.x.toString() + this.position.y.toString(); }
 };
 
+let GraphSynthNode = function(position) {
+    GraphAudioNode.call(this, position);
+    this.instrument = new AudioController.Instrument();
+    this.frequency = '440hz';
 
-let VizGraph = function() {
+    this.play = () => this.instrument.play(this.frequency);
+    this.random = () => this.instrument.playRandom();
+};
+
+let GraphSampleNode = function(position, sample) {
+    GraphAudioNode.call(this, position);
+    this.sample = sample;
+};
+
+
+let Graph = function() {
     this.nodes = [];
+
     this.create_node = function(coord) {
-        this.nodes.push(new VizGraphNode(coord));
+        this.nodes.push(new GraphSynthNode(coord));
     };
+
     this.has_selected = function() {
         this.nodes.forEach(node => { if (node.selected) return true; });
         return false;
     };
+
     this.clear_selections = function() {
         for (let node of this.nodes) {
             node.selected = false;
         }
+    };
+
+    this.traverse_selected = function() {
+        for (let node of this.nodes) {
+            if (node.selected) {
+                console.log('playing random');
+                node.random();
+            }
+        }
     }
 };
 
-let Graphics = function() {
-    this.graph = new VizGraph();
+let GraphController = function() {
+    this.graph = new Graph();
 
     this.canvas = document.createElement('canvas');
     document.body.appendChild(this.canvas);
@@ -56,13 +82,17 @@ let Graphics = function() {
         idColor : '#000000',
         idFontSize : 60,
         idFont : 'Arial'
+    };
+
+    this.trigger_selected = function() {
+        this.graph.traverse_selected();
     }
 
     /**
      *  Returns the first node that contains the given coordinate
      *  Return null if no nodes contain 'coord'
      *  @param {*}         coord - {x : Number, y : Number} coordinate to compare
-     *  @param {VizGraphNode} node  - {VizGraphNode} Optionally specify single node to ignore
+     *  @param {AudioNode} node  - {AudioNode} Optionally specify single node to ignore
      */ 
     this.hovering = function(coord, scale=2, ignore_node=null) {
         for (let node of this.graph.nodes) {

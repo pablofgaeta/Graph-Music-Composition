@@ -1,7 +1,7 @@
 
 // Singleton to control the state of the Application
-(function() {
-    let environment = new Graphics();
+let GRAPHIX = (function() {
+    let environment = new GraphController();
     let gui = new dat.GUI();
 
 
@@ -127,8 +127,21 @@
         environment.draw_graph();
     };
 
+    // document.onkeydown = (event) => {
+    //     if (event.key == '.') {
+    //         // environment.trigger_all_selected();
+    //         console.log('triggering base nodes');
+    //     }
+    // };
+
+    let audio_trigger = {
+        'all' : () => environment.trigger_selected()
+    };
+
     let graphicsSettings = environment.specs;
     let graphicscontrollers = [];
+
+    graphicscontrollers.push(gui.add(audio_trigger, 'all').name('Flood Trigger'));
 
     let graphSpecs = gui.addFolder('Graphics Specs');
     graphicscontrollers.push(graphSpecs.addColor(graphicsSettings, 'background'));
