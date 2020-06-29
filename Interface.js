@@ -1,6 +1,6 @@
 
 // Singleton to control the state of the Application
-let GRAPHIX = (function() {
+let Interface = (function() {
     let environment = new GraphController();
     let gui = new dat.GUI();
 
@@ -16,8 +16,8 @@ let GRAPHIX = (function() {
     // Selection variables
     let move_selection = false;
     let multi_selection = false;
-    let selectionStart = null;
-    let selectionEnd = null;
+    let selection_start = null;
+    let selection_end = null;
 
     // Lambda functions for getting states of the interface
     let special = (mouseEvent) => mouseEvent.shiftKey || mouseEvent.metaKey || mouseEvent.ctrlKey || mouseEvent.altKey;
@@ -41,7 +41,8 @@ let GRAPHIX = (function() {
 
         // HANDLE DRAG INSTRUCTIONS
         if (!special(event)) {
-            selectionStart = mouse;
+            environment.on_edge(mouse);
+            selection_start = mouse;
             // HANDLE VALID SELECTION
             if (existing_node) {
                 move_selection = true;
@@ -70,11 +71,22 @@ let GRAPHIX = (function() {
         }
     }
 
+    // window.onmousemove = (event) => {
+    //     let mouse = {
+    //         x : event.clientX + window.pageXOffset, 
+    //         y : event.clientY + window.pageYOffset
+    //     };
+
+    //     drag.style.top = (mouse.y) + 'px';
+    //     drag.style.left = (mouse.x) + 'px';
+    // }
+
     environment.canvas.onmousemove = (event) => {
         let mouse = {
             x : event.clientX + window.pageXOffset, 
             y : event.clientY + window.pageYOffset
         };
+
 
         // IF REGISTERED EDGE DRAG
         if (creating_edge()) {
@@ -94,16 +106,17 @@ let GRAPHIX = (function() {
 
         // First check if should move selection
         else if (move_selection && mouse_down) {
+
             environment.move_selected({x : event.movementX, y : event.movementY});
             environment.draw_graph();
         }
         // Now check if creating multi-selection box
         else if (!special(event) && mouse_down) {
-            selectionEnd = mouse;
+            selection_end = mouse;
             multi_selection = true;
-            environment.select_in_rect(selectionStart, selectionEnd);
+            environment.select_in_rect(selection_start, selection_end);
             environment.draw_graph();
-            environment.draw_rect(selectionStart, selectionEnd);
+            environment.draw_rect(selection_start, selection_end);
         }
     }
 
@@ -117,7 +130,7 @@ let GRAPHIX = (function() {
 
         // IF CONNECTED EDGE TO EDGE, CREATE CONNECTION
         if (can_finish_edge(existing_node)) {
-            parent_node.add_child(existing_node);
+            parent_node.add_edge(existing_node);
         }
     
         // Ensure Graph state resets to idle state
@@ -127,12 +140,11 @@ let GRAPHIX = (function() {
         environment.draw_graph();
     };
 
-    // document.onkeydown = (event) => {
-    //     if (event.key == '.') {
-    //         // environment.trigger_all_selected();
-    //         console.log('triggering base nodes');
-    //     }
-    // };
+    document.onkeydown = (event) => {
+        if (event.key == 'x') {
+            environment.trigger_selected();
+        }
+    };
 
     let audio_trigger = {
         'all' : () => environment.trigger_selected()
@@ -155,7 +167,8 @@ let GRAPHIX = (function() {
     graphicscontrollers.push(nodeSpecs.add(graphicsSettings, 'arrowLength', 5, 40));
     graphicscontrollers.push(nodeSpecs.add(graphicsSettings, 'selectionWidth', 1, 20));
     graphicscontrollers.push(nodeSpecs.addColor(graphicsSettings, 'selectionColor'));
-    graphicscontrollers.push(nodeSpecs.addColor(graphicsSettings, 'circleColor'));
+    graphicscontrollers.push(nodeSpecs.addColor(graphicsSettings, 'idleNodeColor'));
+    graphicscontrollers.push(nodeSpecs.addColor(graphicsSettings, 'playNodeColor'));
 
 
     let idSpecs = graphSpecs.addFolder('ID text Specs');
@@ -169,5 +182,8 @@ let GRAPHIX = (function() {
 
     gui.remember(graphicsSettings);
     
-    return environment;
+    return {
+        'environment' : environment,
+        'gui' : gui
+    }
 })();

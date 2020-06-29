@@ -1,13 +1,17 @@
+var count = 0;
 let GraphAudioNode = function(position) {
-    this.parents = [];
     this.children = [];
     this.position = position;
     this.selected = false;
+    this.playingAnimation = false;
 
-    this.add_parent = function(node) { this.parents.push(node); }
-    this.add_child  = function(node) { if (!this.has_child(node)) this.children.push(node); }
+    this.add_edge  = function(node) { 
+        if (!this.has_child(node)) {
+            this.children.push(node); 
+        }
+        else console.log("Child Already Exists");
+    }
     this.has_child  = function(node) { return this.children.includes(node); }
-    this.has_parent = function(node) { return this.parents.includes(node); }
     this.is_hovering = function(coord, radius) {
         let x = this.position.x - coord.x;
         let y = this.position.y - coord.y;
@@ -16,6 +20,7 @@ let GraphAudioNode = function(position) {
     this.select = function() { this.selected = true; }
     this.toggle_selected = function() { this.selected = !this.selected; }
     this.hash = function() { return this.position.x.toString() + this.position.y.toString(); }
+    this.trigger = function() {};
 };
 
 let GraphSynthNode = function(position) {
@@ -25,6 +30,7 @@ let GraphSynthNode = function(position) {
 
     this.play = () => this.instrument.play(this.frequency);
     this.random = () => this.instrument.playRandom();
+    this.trigger = () => this.random();
 };
 
 let GraphSampleNode = function(position, sample) {
@@ -50,22 +56,15 @@ let Graph = function() {
             node.selected = false;
         }
     };
-
-    this.traverse_selected = function() {
-        for (let node of this.nodes) {
-            if (node.selected) {
-                console.log('playing random');
-                node.random();
-            }
-        }
-    }
 };
 
 let GraphController = function() {
     this.graph = new Graph();
 
+    this.selected_edge = null;
+
     this.canvas = document.createElement('canvas');
-    document.body.appendChild(this.canvas);
+    document.body. appendChild(this.canvas);
     this.context = this.canvas.getContext("2d");
 
     this.specs = {
@@ -78,15 +77,34 @@ let GraphController = function() {
         arrowLength : 20,
         selectionWidth : 15,
         selectionColor : '#6969fa',
-        circleColor : '#f0fd96',
+        idleNodeColor : '#f0fd96',
+        playNodeColor : '#ff71f1',
         idColor : '#000000',
         idFontSize : 60,
         idFont : 'Arial'
     };
 
     this.trigger_selected = function() {
-        this.graph.traverse_selected();
+        for (let node of this.graph.nodes) {
+            if (node.selected) {
+                console.log('playing random');
+                this.flood_trigger(node);
+            }
+        }
     }
+
+    this.flood_trigger = async function(node) {
+        console.log(++count);
+        node.playingAnimation = true;
+        this.draw_graph();
+        node.trigger();
+        for (let child of node.children) {
+            setTimeout(() => {
+                node.playingAnimation = false;
+                this.flood_trigger(child);
+            }, Math.random()*1000);
+        }
+    };
 
     /**
      *  Returns the first node that contains the given coordinate
@@ -105,19 +123,22 @@ let GraphController = function() {
     }
 
     // Draw the environment graph
-    this.draw_graph = function() {
+    this.draw_graph = function(check_coord_edge) {
         // Clear canvas first
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         let edge_pairs = {};
 
+        console.log(this.selected_edge);
         // Draw all edges between nodes
         for (let node of this.graph.nodes) {
             for (let child of node.children) {
+                let existing_hash = child.hash() + '->' + node.hash();
                 // Make sure not to duplicate drawing an edge
-                if (!edge_pairs.hasOwnProperty(child.hash() + '->' + node.hash())) {
-                    this.draw_edge(node.position, child.position);
-                    edge_pairs[node.hash() + '->' + child.hash()] = true;
+                if (!edge_pairs.hasOwnProperty(existing_hash)) {
+                    let new_hash = node.hash() + '->' + child.hash();
+                    this.draw_edge(node.position, child.position, this.selected_edge == new_hash);
+                    edge_pairs[new_hash] = true;
                 }
                 this.draw_arrow(node.position, child.position);
             }
@@ -142,7 +163,8 @@ let GraphController = function() {
 
         this.context.beginPath();
         this.context.arc(x, y, this.specs.radius, 0, 2 * Math.PI);
-        this.context.fillStyle = this.specs.circleColor;
+        this.context.fillStyle = node.playingAnimation ? 
+                                this.specs.playNodeColor : this.specs.idleNodeColor;
         if (node.selected) {
             this.context.strokeStyle = this.specs.selectionColor;
             this.context.lineWidth = this.specs.selectionWidth; 
@@ -156,8 +178,10 @@ let GraphController = function() {
         this.context.fillText(id.toString(), x, y + this.specs.idFontSize / 3);
     }
 
-    this.draw_edge = function(coord1, coord2) {
+    this.draw_edge = function(coord1, coord2, selected=false) {
         let chopped_coords = this.calculate_edge_pair(coord1, coord2);
+        if (selected)
+            this.draw_line(chopped_coords[0], chopped_coords[1], this.specs.edgeWidth*1.5,'#ffffff');
         this.draw_line(chopped_coords[0], chopped_coords[1]);
     }
     
@@ -173,6 +197,40 @@ let GraphController = function() {
         this.context.lineWidth = width;
         this.context.strokeStyle = color;
         this.context.stroke();
+    }
+
+    this.on_edge = function(coord) {
+        var found = false;
+        for (let node of this.graph.nodes) {
+            for (let child of node.children) {
+                found = this.on_line({'parent' : node, 'child' : child}, coord);
+                if (found) {
+                    this.selected_edge = node.hash() + '->' + child.hash();
+                    return;
+                }
+            }
+        }
+        this.selected_edge = null;
+    }
+
+    this.on_line = function(edge, coord) {
+        let edge_boundaries = this.calculate_edge_pair(edge.parent.position, edge.child.position);
+        let p1 = edge_boundaries[0];
+        let p2 = edge_boundaries[1];
+
+        let in_bounds = Math.max(p1.y, p2.y) > coord.y &&
+                        Math.min(p1.y, p2.y) < coord.y;
+
+        if (p2.x == p1.x) {
+            return Math.abs(coord.x - p1.x) < this.specs.edgeWidth && in_bounds;
+        }
+        else {
+            let slope = (p2.y - p1.y) / (p2.x - p1.x);
+            let y_est = (x) => slope * (x - p1.x) + p1.y;
+            let radius = 1.5 * this.specs.edgeWidth;
+    
+            return Math.abs(y_est(coord.x) - coord.y) < radius && in_bounds;
+        }
     }
 
     this.draw_rect = function(coord1, coord2, width=this.specs.edgeWidth/3) {

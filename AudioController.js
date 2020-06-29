@@ -29,12 +29,12 @@ let AudioController = (function(type) {
         Instrument : function(scale = JustRatios['mP']) {
             this.scale = scale;
             this.voice = {
-                tone : new Tone.PolySynth(6, Tone.AMSynth, {
+                tone : new Tone.PolySynth(20, Tone.AMSynth, {
                         modulation : {
                             type : 'sine'
                         }
                 }).toMaster(),
-                release : '16n',
+                release : '32n',
                 base : 440
             };
 
