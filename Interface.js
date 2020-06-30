@@ -1,8 +1,9 @@
-
 // Singleton to control the state of the Application
 let Interface = (function() {
     let environment = new GraphController();
     let gui = new dat.GUI();
+
+    let current_mouse_position = new Coordinate(0,0);
 
 
     /********* STATE CONTROLLER *************/
@@ -19,6 +20,7 @@ let Interface = (function() {
     let selection_start = null;
     let selection_end = null;
 
+
     // Lambda functions for getting states of the interface
     let special = (mouseEvent) => mouseEvent.shiftKey || mouseEvent.metaKey || mouseEvent.ctrlKey || mouseEvent.altKey;
     let edge_mode = (mouseEvent) => mouseEvent.shiftKey; 
@@ -31,11 +33,12 @@ let Interface = (function() {
     window.onresize = window.onload = () => { environment.update_canvas();  };
 
     environment.canvas.onmousedown = (event) => {
-        let mouse = {
-            x : event.clientX + window.pageXOffset, 
-            y : event.clientY + window.pageYOffset
-        };
+        let mouse = new Coordinate( 
+            event.clientX + window.pageXOffset,  
+            event.clientY + window.pageYOffset
+        );
         mouse_down = true;
+
 
         let existing_node = environment.hovering_node(mouse, 1);
         let existing_edge = environment.hovering_edge(mouse);
@@ -74,11 +77,11 @@ let Interface = (function() {
     }
 
     environment.canvas.onmousemove = (event) => {
-        let mouse = {
-            x : event.clientX + window.pageXOffset, 
-            y : event.clientY + window.pageYOffset
-        };
-
+        let mouse = new Coordinate( 
+            event.clientX + window.pageXOffset,  
+            event.clientY + window.pageYOffset
+        );
+        current_mouse_position.set(mouse.x, mouse.y);
 
         // IF REGISTERED EDGE DRAG
         if (creating_edge()) {
@@ -86,7 +89,7 @@ let Interface = (function() {
             let hover_self  = parent_node.is_hovering(mouse, environment.specs.radius);
             // DRAW TEMPORARY EDGE LINE IF IN EDGE MODE AND NOT OVER SELF
             if (edge_mode(event) && !hover_self) {
-                environment.draw_temp_edge(parent_node.position, mouse);
+                environment.draw_temp_edge(parent_node, mouse);
             }
         }
 
@@ -106,10 +109,10 @@ let Interface = (function() {
     }
 
     environment.canvas.onmouseup = (event) => {
-        let mouse = {
-            x : event.clientX + window.pageXOffset, 
-            y : event.clientY + window.pageYOffset
-        };
+        let mouse = new Coordinate(
+            event.clientX + window.pageXOffset, 
+            event.clientY + window.pageYOffset
+        );
         
         let existing_node = environment.hovering_node(mouse, 1);
 
@@ -126,6 +129,9 @@ let Interface = (function() {
     };
 
     document.onkeydown = (event) => {
+        if (event.key == 'e') {
+            environment.spawn_menu(current_mouse_position);
+        }
         if (event.key == 'x') {
             environment.trigger_selected();
         }
@@ -138,30 +144,35 @@ let Interface = (function() {
         }
     };
 
-    let audio_trigger = {
-        'all' : () => environment.trigger_selected()
+    let global_triggers = {
+        'trigger-selected' : () => environment.trigger_selected(),
+        'kill-all'         : () => environment.kill()
     };
 
     let graphicsSettings = environment.specs;
     let graphicscontrollers = [];
 
-    graphicscontrollers.push(gui.add(audio_trigger, 'all').name('Flood Trigger'));
+    graphicscontrollers.push(gui.add(global_triggers, 'trigger-selected').name('Flood Trigger'));
+    graphicscontrollers.push(gui.add(global_triggers, 'kill-all').name('Kill Traversal'));
 
     let graphSpecs = gui.addFolder('Graphics Specs');
-    graphicscontrollers.push(graphSpecs.addColor(graphicsSettings, 'background'));
-    graphicscontrollers.push(graphSpecs.add(graphicsSettings, 'widthScale', 1, 20));
-    graphicscontrollers.push(graphSpecs.add(graphicsSettings, 'heightScale', 1, 20));
+    let generalSpecs = graphSpecs.addFolder('General Specs');
+    graphicscontrollers.push(generalSpecs.addColor(graphicsSettings, 'background'));
+    graphicscontrollers.push(generalSpecs.add(graphicsSettings, 'widthScale', 1, 20));
+    graphicscontrollers.push(generalSpecs.add(graphicsSettings, 'heightScale', 1, 20));
+    graphicscontrollers.push(generalSpecs.add(graphicsSettings, 'menuWidth', 50, 300));
 
     let nodeSpecs = graphSpecs.addFolder('Node Specs');
     graphicscontrollers.push(nodeSpecs.add(graphicsSettings, 'radius', 1, 100));
-    graphicscontrollers.push(nodeSpecs.add(graphicsSettings, 'edgeWidth', 1, 10));
-    graphicscontrollers.push(nodeSpecs.addColor(graphicsSettings, 'edgeColor'));
-    graphicscontrollers.push(nodeSpecs.add(graphicsSettings, 'arrowLength', 5, 40));
-    graphicscontrollers.push(nodeSpecs.add(graphicsSettings, 'selectionWidth', 1, 20));
-    graphicscontrollers.push(nodeSpecs.addColor(graphicsSettings, 'selectionColor'));
     graphicscontrollers.push(nodeSpecs.addColor(graphicsSettings, 'idleNodeColor'));
+    graphicscontrollers.push(nodeSpecs.addColor(graphicsSettings, 'selectionColor'));
+    graphicscontrollers.push(nodeSpecs.add(graphicsSettings, 'selectionWidth', 1, 20));
     graphicscontrollers.push(nodeSpecs.addColor(graphicsSettings, 'playNodeColor'));
 
+    let edgeSpecs = graphSpecs.addFolder('Edge Specs');
+    graphicscontrollers.push(edgeSpecs.add(graphicsSettings, 'edgeWidth', 1, 10));
+    graphicscontrollers.push(edgeSpecs.addColor(graphicsSettings, 'edgeColor'));
+    graphicscontrollers.push(edgeSpecs.add(graphicsSettings, 'arrowLength', 5, 40));
 
     let idSpecs = graphSpecs.addFolder('ID text Specs');
     graphicscontrollers.push(idSpecs.add(graphicsSettings, 'idFont'));

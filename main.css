@@ -15,3 +15,10 @@ body {
     top: 50px;
     left:50px;
 }
+
+.menu {
+    position : fixed;
+    z-index : 100;
+    /* top : 50px;
+    left : 50px; */
+}
