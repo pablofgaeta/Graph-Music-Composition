@@ -27,8 +27,36 @@
 <p>Utilizes directed graph traversals (and other graph theory) to present a visual algorithmic approach to composition.
 All graphics are drawn in Vanilla JS using basic rendering on a Canvas Element</p>
 <h2 id="how-to-use">How To Use</h2>
+<h3 id="creation-commands">Creation commands</h3>
 <ul>
-<li>A section is started by triggering a node, the rest is automatic through graph traversal</li>
+<li>Create node                : <kbd>cmd</kbd> + <kbd>click</kbd></li>
+<li>Create edge                : <kbd>shift</kbd> (hold) + click and drag from one node to another</li>
+<li>Create instrument          : <kbd>cmd</kbd> + <kbd>i</kbd> (edit in dat.GUI window 'INSTRUMENT EDITOR')</li>
+</ul>
+<h3 id="selection-commands">Selection commands</h3>
+<ul>
+<li>Move (single or multi-select) : <kbd>click</kbd> (over a node) + drag mouse</li>
+<li>Toggle node/edge selection    : <kbd>option</kbd> + click (over a node)</li>
+<li>Multi-select                  : <kbd>click</kbd> (NOT over a node) + drag over desired nodes/edges
+<ul>
+<li>Delete selected             : <kbd>delete</kbd> / <kbd>backspace</kbd></li>
+</ul>
+</li>
+</ul>
+<h3 id="edit-modes">Edit modes</h3>
+<ul>
+<li>Edit node voice       : <kbd>e</kbd> (while a node is selected)</li>
+<li>Toggle dat.GUI window : <kbd>h</kbd></li>
+<li>Edit instrument       : the 'INSTRUMENT EDITOR' in the GUI window at the top right contains parameters to control each created instrument</li>
+</ul>
+<h3 id="play-modes">Play modes</h3>
+<ul>
+<li>Trigger selected nodes : <kbd>x</kbd>
+<ul>
+<li>Triggering a node causes automatic traversal of the directed graph</li>
+<li>A symbolic trigger can be created to trigger multiple sections instantaneously with a single click</li>
+</ul>
+</li>
 </ul>
 <h2 id="files">Files</h2>
 <ul>
@@ -38,10 +66,10 @@ All graphics are drawn in Vanilla JS using basic rendering on a Canvas Element</
 </ul>
 <h2 id="plans">PLANS</h2>
 <ul>
-<li>✅ - Graph/Node classes</li>
-<li>✅ (mostly) - Design Graph Visualization</li>
-<li>Graph traversal algorithms</li>
-<li>Timed traversal events</li>
+<li>✅ : Graph/Node classes</li>
+<li>✅ : Design Graph Visualization (mostly)</li>
+<li>✅ : Graph traversal algorithms (until more complex ones)</li>
+<li>✅ : Timed traversal events</li>
 <li>Design each instrument with dat.gui
 <ul>
 <li>[Synth vs. sample]</li>
@@ -50,7 +78,7 @@ All graphics are drawn in Vanilla JS using basic rendering on a Canvas Element</
 <li>Dynamic FX over time or algorithmically for an instrument</li>
 </ul>
 </li>
-<li>Associate each node (single voice) with registered instrument</li>
+<li>✅ : Associate each node (single voice) with registered instrument</li>
 <li>Node frequency control
 <ul>
 <li>relative</li>

@@ -3,7 +3,23 @@ Utilizes directed graph traversals (and other graph theory) to present a visual 
 All graphics are drawn in Vanilla JS using basic rendering on a Canvas Element
 
 ## How To Use
-* A section is started by triggering a node, the rest is automatic through graph traversal
+### Creation commands
+* Create node                : <kbd>cmd</kbd> + <kbd>click</kbd>
+* Create edge                : <kbd>shift</kbd> (hold) + click and drag from one node to another
+* Create instrument          : <kbd>cmd</kbd> + <kbd>i</kbd> (edit in dat.GUI window 'INSTRUMENT EDITOR')
+### Selection commands
+* Move (single or multi-select) : <kbd>click</kbd> (over a node) + drag mouse
+* Toggle node/edge selection    : <kbd>option</kbd> + click (over a node)
+* Multi-select                  : <kbd>click</kbd> (NOT over a node) + drag over desired nodes/edges
+  - Delete selected             : <kbd>delete</kbd> / <kbd>backspace</kbd> 
+### Edit modes
+* Edit node voice       : <kbd>e</kbd> (while a node is selected)
+* Toggle dat.GUI window : <kbd>h</kbd>
+* Edit instrument       : the 'INSTRUMENT EDITOR' in the GUI window at the top right contains parameters to control each created instrument
+### Play modes 
+* Trigger selected nodes : <kbd>x</kbd>
+  - Triggering a node causes automatic traversal of the directed graph
+  - A symbolic trigger can be created to trigger multiple sections instantaneously with a single click
 
 ## Files
 * Graph.js
@@ -11,16 +27,16 @@ All graphics are drawn in Vanilla JS using basic rendering on a Canvas Element
 * Audio.js                     : Audio engine for individual instruments 
 
 ## PLANS
-* ✅ - Graph/Node classes
-* ✅ (mostly) - Design Graph Visualization
-* Graph traversal algorithms
-* Timed traversal events
+* ✅ : Graph/Node classes
+* ✅ : Design Graph Visualization (mostly)
+* ✅ : Graph traversal algorithms (until more complex ones)
+* ✅ : Timed traversal events
 * Design each instrument with dat.gui
     - [Synth vs. sample]
     - Synth FX : timbre/adsr/effects/FM or AM Algorithms
     - Sample FX : playback rate/effects
     - Dynamic FX over time or algorithmically for an instrument
-* Associate each node (single voice) with registered instrument
+* ✅ : Associate each node (single voice) with registered instrument
 * Node frequency control 
   - relative
   - just-tuned
