@@ -1,11 +1,13 @@
 var count = 0;
-let GraphAudioNode = function(position) {
+
+let GraphAudioNode = function(position, id) {
     this.children = [];
     this.position = position;
     this.selected = false;
     this.playingAnimation = false;
+    this.id = id;
 
-    this.add_edge  = function(node) { 
+    this.add_child  = function(node) { 
         if (!this.has_child(node)) {
             this.children.push(node); 
         }
@@ -23,8 +25,8 @@ let GraphAudioNode = function(position) {
     this.trigger = function() {};
 };
 
-let GraphSynthNode = function(position) {
-    GraphAudioNode.call(this, position);
+let GraphSynthNode = function(position, id) {
+    GraphAudioNode.call(this, position, id);
     this.instrument = new AudioController.Instrument();
     this.frequency = '440hz';
 
@@ -33,18 +35,49 @@ let GraphSynthNode = function(position) {
     this.trigger = () => this.random();
 };
 
-let GraphSampleNode = function(position, sample) {
-    GraphAudioNode.call(this, position);
+let GraphSampleNode = function(position, sample, id) {
+    GraphAudioNode.call(this, position, id);
     this.sample = sample;
 };
+
+let GraphEdge = function(parent, child, delay=500) {
+    this.parent = parent;
+    this.child = child;
+    this.delay = delay;
+    this.selected = false;
+
+    this.select = function() { this.selected = true; }
+    this.toggle_selected = function() { this.selected = !this.selected; }
+    this.hash = (parent_hash = this.parent.id, child_hash = this.child.id) => {
+        if (parent_hash != child_hash) return parent_hash + '->' + child_hash;
+        else                           throw "Nodes not unique";
+    };
+    this.reverse_hash = () => {
+        return this.hash(this.child.id, this.parent.id);
+    };
+}
+
+// GraphEdge.rhash = (edge_hash) => edge_hash.replace(/(\d+)->(\d+)/, '$2->$1');
 
 
 let Graph = function() {
     this.nodes = [];
+    this.edges = {};
+    this.next_id = 0;
 
     this.create_node = function(coord) {
-        this.nodes.push(new GraphSynthNode(coord));
+        this.nodes.push(new GraphSynthNode(coord, this.next_id++));
     };
+
+    this.create_edge = function(parent, child) {
+        let new_edge = new GraphEdge(parent, child);
+        parent.add_child(child);
+
+        let eh = new_edge.hash();
+        if (!this.edges.hasOwnProperty(eh)) {
+            this.edges[eh] = new_edge;
+        }
+    }
 
     this.has_selected = function() {
         this.nodes.forEach(node => { if (node.selected) return true; });
@@ -55,13 +88,42 @@ let Graph = function() {
         for (let node of this.nodes) {
             node.selected = false;
         }
+        for (let edge_hash in this.edges) {
+            this.edges[edge_hash].selected = false;
+        }
     };
+
+    this.delete_selected = function() {
+        let deleted_nodes = [];
+
+        // Remove any nodes first
+        for (let i = this.nodes.length - 1; i >= 0; --i) {
+            let node = this.nodes[i];
+            if (node.selected) {
+                // Remove node
+                deleted_nodes.push(this.nodes.splice(i, 1)[0]);
+
+                // Clean up lingering references to node
+                for (let potential_parent of this.nodes) {
+                    let i = potential_parent.children.indexOf(node);
+                    if (i != -1) potential_parent.children.splice(i, 1);
+                }
+            }
+        }
+        // Remove any selected edges or edges dependent on deleted nodes
+        for (let edge_hash in this.edges) {
+            let edge = this.edges[edge_hash];
+            if (edge.selected || 
+                deleted_nodes.includes(edge.parent) || 
+                deleted_nodes.includes(edge.child)) {
+                    delete this.edges[edge_hash];
+            }
+        }
+    }
 };
 
 let GraphController = function() {
     this.graph = new Graph();
-
-    this.selected_edge = null;
 
     this.canvas = document.createElement('canvas');
     document.body. appendChild(this.canvas);
@@ -112,7 +174,7 @@ let GraphController = function() {
      *  @param {*}         coord - {x : Number, y : Number} coordinate to compare
      *  @param {AudioNode} node  - {AudioNode} Optionally specify single node to ignore
      */ 
-    this.hovering = function(coord, scale=2, ignore_node=null) {
+    this.hovering_node = function(coord, scale=2, ignore_node=null) {
         for (let node of this.graph.nodes) {
             if (node == ignore_node) continue;
             if (node.is_hovering(coord, this.specs.radius * scale)) {
@@ -122,70 +184,74 @@ let GraphController = function() {
         return null;
     }
 
+    this.hovering_edge = function(coord) {
+        for (let edge_hash in this.graph.edges) {
+            let edge = this.graph.edges[edge_hash];
+
+            if (this.coord_within_edge(edge, coord)) {
+                return edge;
+            }
+        }
+        return null;
+    }
+
     // Draw the environment graph
-    this.draw_graph = function(check_coord_edge) {
+    this.draw_graph = function() {
         // Clear canvas first
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        let edge_pairs = {};
+        this.draw_all_edges();
+        this.draw_all_nodes();
+    }
 
-        console.log(this.selected_edge);
-        // Draw all edges between nodes
-        for (let node of this.graph.nodes) {
-            for (let child of node.children) {
-                let existing_hash = child.hash() + '->' + node.hash();
-                // Make sure not to duplicate drawing an edge
-                if (!edge_pairs.hasOwnProperty(existing_hash)) {
-                    let new_hash = node.hash() + '->' + child.hash();
-                    this.draw_edge(node.position, child.position, this.selected_edge == new_hash);
-                    edge_pairs[new_hash] = true;
+    this.draw_all_edges = function() {
+        let drawn_hashes = {};
+
+        for (let edge_hash in this.graph.edges) {
+            let edge = this.graph.edges[edge_hash];
+            let reverse_edge_hash = edge.reverse_hash();
+            
+            // If not already drawn edge, draw edge
+            if (!drawn_hashes.hasOwnProperty(reverse_edge_hash)) {
+                let chopped_coords = this.calculate_edge_pair(edge.parent.position, edge.child.position);
+                if (edge.selected) {
+                    this.draw_line(chopped_coords[0], chopped_coords[1], 
+                        width=this.specs.edgeWidth*1.5, color='#ffffff');
                 }
-                this.draw_arrow(node.position, child.position);
+                this.draw_line(chopped_coords[0], chopped_coords[1]);
+                drawn_hashes[edge_hash] = true;
             }
+            // Draw arrow
+            let points = this.calculate_arrow(edge.parent.position, edge.child.position);
+            this.draw_line(points.start, points.ends[0], this.specs.edgeWidth / 2);
+            this.draw_line(points.start, points.ends[1], this.specs.edgeWidth / 2);
         }
+    }
 
-        // Draw each node
-        let count = 0;
+    this.draw_all_nodes = function() {
         for (let node of this.graph.nodes) {
-            this.draw_node(node, count++);
+            let x = node.position.x; 
+            let y = node.position.y;
+
+            this.context.beginPath();
+            this.context.arc(x, y, this.specs.radius, 0, 2 * Math.PI);
+            this.context.fillStyle = node.playingAnimation ? 
+                                    this.specs.playNodeColor : this.specs.idleNodeColor;
+            if (node.selected) {
+                this.context.strokeStyle = this.specs.selectionColor;
+                this.context.lineWidth = this.specs.selectionWidth; 
+                this.context.stroke();
+            }
+            this.context.fill();
+        
+            this.context.font = this.specs.idFontSize + 'px ' + this.specs.idFont;
+            this.context.fillStyle = this.specs.idColor;
+            this.context.textAlign = "center";
+            this.context.fillText(node.id, x, y + this.specs.idFontSize / 3);
         }
     }
-
-    this.draw_arrow = function(coord1, coord2) {
-        let points = this.calculate_arrows(coord1, coord2);
-        this.draw_line(points.start, points.ends[0], this.specs.edgeWidth / 2);
-        this.draw_line(points.start, points.ends[1], this.specs.edgeWidth / 2);
-    }
-
-    this.draw_node = function(node, id) {
-        let x = node.position.x; 
-        let y = node.position.y;
-
-        this.context.beginPath();
-        this.context.arc(x, y, this.specs.radius, 0, 2 * Math.PI);
-        this.context.fillStyle = node.playingAnimation ? 
-                                this.specs.playNodeColor : this.specs.idleNodeColor;
-        if (node.selected) {
-            this.context.strokeStyle = this.specs.selectionColor;
-            this.context.lineWidth = this.specs.selectionWidth; 
-            this.context.stroke();
-        }
-        this.context.fill();
     
-        this.context.font = this.specs.idFontSize + 'px ' + this.specs.idFont;
-        this.context.fillStyle = this.specs.idColor;
-        this.context.textAlign = "center";
-        this.context.fillText(id.toString(), x, y + this.specs.idFontSize / 3);
-    }
-
-    this.draw_edge = function(coord1, coord2, selected=false) {
-        let chopped_coords = this.calculate_edge_pair(coord1, coord2);
-        if (selected)
-            this.draw_line(chopped_coords[0], chopped_coords[1], this.specs.edgeWidth*1.5,'#ffffff');
-        this.draw_line(chopped_coords[0], chopped_coords[1]);
-    }
-    
-    this.draw_moving_edge = function(node_coord, mouse_coord) {
+    this.draw_temp_edge = function(node_coord, mouse_coord) {
         let chopped_coords = this.calculate_edge_pair(node_coord, mouse_coord);
         this.draw_line(chopped_coords[0], mouse_coord);
     }
@@ -199,21 +265,7 @@ let GraphController = function() {
         this.context.stroke();
     }
 
-    this.on_edge = function(coord) {
-        var found = false;
-        for (let node of this.graph.nodes) {
-            for (let child of node.children) {
-                found = this.on_line({'parent' : node, 'child' : child}, coord);
-                if (found) {
-                    this.selected_edge = node.hash() + '->' + child.hash();
-                    return;
-                }
-            }
-        }
-        this.selected_edge = null;
-    }
-
-    this.on_line = function(edge, coord) {
+    this.coord_within_edge = function(edge, coord) {
         let edge_boundaries = this.calculate_edge_pair(edge.parent.position, edge.child.position);
         let p1 = edge_boundaries[0];
         let p2 = edge_boundaries[1];
@@ -268,44 +320,25 @@ let GraphController = function() {
             y : Math.max(coord1.y, coord2.y)
         }
 
+        let in_rect = (target) => {
+            return target.x >= tleft.x && target.x <= bright.x &&
+                   target.y >= tleft.y && target.y <= bright.y;
+        }
+
         for (let node of this.graph.nodes) {
-            let pos = node.position;
-            if (pos.x >= tleft.x && pos.x <= bright.x &&
-                pos.y >= tleft.y && pos.y <= bright.y) {
-                    node.selected = true;
-            }
-            else {
-                node.selected = false;
-            }
+            node.selected = in_rect(node.position);
         }
-    }
-
-    this.march_towards = function(coord1, coord2) {
-        let chopped_coords = this.calculate_edge_pair(coord1, coord2);
-        let theta = chopped_coords[2];
-
-        let prev_coord = {
-            x : chopped_coords[0].x - 0.01 * Math.cos(theta),
-            y : chopped_coords[0].y - 0.01 * Math.sin(theta)
-        };
-
-        let isclose = (c1, c2, tol=0.1) => {
-            return Math.abs(c2.x - c1.x) < tol && Math.abs(c2.y - c1.y) < tol;
-        }
-        
-        let count = 0;
-        while (count < 0 && !isclose(prev_coord, coord2) && !this.hovering(prev_coord, 1)) {
-            let iter_coord = {
-                x : prev_coord.x - 0.01 * Math.cos(theta),
-                y : prev_coord.y - 0.01 * Math.sin(theta)
-            };
-            this.draw_line(prev_coord, iter_coord);
-            prev_coord = iter_coord;
-            ++count;
+        for (let edge_hash in this.graph.edges) {
+            let edge = this.graph.edges[edge_hash];
+            let midpoint = {
+                x : ( edge.parent.position.x + edge.child.position.x ) / 2,
+                y : ( edge.parent.position.y + edge.child.position.y ) / 2
+            }
+            edge.selected = in_rect(midpoint);
         }
     }
     
-    this.calculate_arrows = function(coord1, coord2) {
+    this.calculate_arrow = function(coord1, coord2) {
         let chopped_coords = this.calculate_edge_pair(coord1, coord2);
 
         let x1 = chopped_coords[0].x; let x2 = chopped_coords[1].x;

@@ -37,18 +37,19 @@ let Interface = (function() {
         };
         mouse_down = true;
 
-        let existing_node = environment.hovering(mouse, 1);
+        let existing_node = environment.hovering_node(mouse, 1);
+        let existing_edge = environment.hovering_edge(mouse);
 
         // HANDLE DRAG INSTRUCTIONS
         if (!special(event)) {
-            environment.on_edge(mouse);
             selection_start = mouse;
             // HANDLE VALID SELECTION
-            if (existing_node) {
-                move_selection = true;
+            if (existing_node || existing_edge) {
+                move_selection = existing_node ? true : false;
                 if (!multi_selection) {
                     environment.graph.clear_selections();
-                    existing_node.select();
+                    if (existing_node) existing_node.select();
+                    if (existing_edge) existing_edge.select();
                 }
             }
             // RESET SELECTION STATE
@@ -57,8 +58,9 @@ let Interface = (function() {
                 multi_selection = false;
             }
         }
-        else if (extend_selection_mode(event) && existing_node) {
-            existing_node.toggle_selected();
+        else if (extend_selection_mode(event)) {
+            if (existing_node) existing_node.toggle_selected();
+            if (existing_edge) existing_edge.toggle_selected();
         }
         // REGISTER SELECTED STARTING NODE
         else if (edge_mode(event) && existing_node) {
@@ -71,16 +73,6 @@ let Interface = (function() {
         }
     }
 
-    // window.onmousemove = (event) => {
-    //     let mouse = {
-    //         x : event.clientX + window.pageXOffset, 
-    //         y : event.clientY + window.pageYOffset
-    //     };
-
-    //     drag.style.top = (mouse.y) + 'px';
-    //     drag.style.left = (mouse.x) + 'px';
-    // }
-
     environment.canvas.onmousemove = (event) => {
         let mouse = {
             x : event.clientX + window.pageXOffset, 
@@ -91,22 +83,15 @@ let Interface = (function() {
         // IF REGISTERED EDGE DRAG
         if (creating_edge()) {
             environment.draw_graph();
-
-            let hover_other = environment.hovering(mouse, 1, parent_node);
             let hover_self  = parent_node.is_hovering(mouse, environment.specs.radius);
-
             // DRAW TEMPORARY EDGE LINE IF IN EDGE MODE AND NOT OVER SELF
             if (edge_mode(event) && !hover_self) {
-                if (hover_other) { 
-                    environment.draw_edge(parent_node.position, hover_other.position); 
-                }
-                else { environment.draw_moving_edge(parent_node.position, mouse); }
+                environment.draw_temp_edge(parent_node.position, mouse);
             }
         }
 
         // First check if should move selection
         else if (move_selection && mouse_down) {
-
             environment.move_selected({x : event.movementX, y : event.movementY});
             environment.draw_graph();
         }
@@ -126,11 +111,11 @@ let Interface = (function() {
             y : event.clientY + window.pageYOffset
         };
         
-        let existing_node = environment.hovering(mouse, 1);
+        let existing_node = environment.hovering_node(mouse, 1);
 
         // IF CONNECTED EDGE TO EDGE, CREATE CONNECTION
         if (can_finish_edge(existing_node)) {
-            parent_node.add_edge(existing_node);
+            environment.graph.create_edge(parent_node, existing_node);
         }
     
         // Ensure Graph state resets to idle state
@@ -143,6 +128,13 @@ let Interface = (function() {
     document.onkeydown = (event) => {
         if (event.key == 'x') {
             environment.trigger_selected();
+        }
+        if (event.key == 'Backspace' || event.key == 'Delete') {
+            environment.graph.delete_selected();
+            environment.draw_graph();
+
+            // Ensure idle selection state
+            multi_selection = false;
         }
     };
 
