@@ -1,4 +1,4 @@
-let AudioController = (function(type) {
+let AudioController = (function() {
     // let keys = [ 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'' ];
 
     function JustScale(ratios, base_frequency) {
@@ -34,7 +34,7 @@ let AudioController = (function(type) {
                             type : 'sine'
                         }
                 }).toMaster(),
-                release : '32n',
+                release : '8n',
                 base : 440
             };
 
@@ -44,7 +44,7 @@ let AudioController = (function(type) {
             this.notes = this.getJust(this.scale);
 
             this.randInt = (max) => Math.floor(Math.random() * Math.floor(max));
-            this.playRandom = () => this.play(this.notes[this.randInt(this.notes.length - 1)]);
+            this.playRandomNote = () => this.play(this.notes[this.randInt(this.notes.length - 1)]);
 
             this.play = (note) => {
                 this.voice.tone.triggerAttackRelease(
@@ -54,3 +54,26 @@ let AudioController = (function(type) {
         }
     }
 })();
+
+let NodeSynth = function() {
+    this.instrument = new AudioController.Instrument();
+    this.frequency = '440hz';
+    this.animating = false;
+
+    /**
+     * Returns the Synth's note length in ms
+     */
+    this.duration = () => Tone.Time(this.instrument.voice.release).toSeconds() * 1000;
+
+    this.play = (freq=this.frequency) => this.instrument.play(freq);
+    this.random = () => this.instrument.playRandomNote();
+    /**
+     * Generic trigger of the synth by user
+     */
+    this.trigger = () => this.play();
+};
+
+let NodeSample = function(sample) {
+    this.sample = sample;
+    this.animating = false;
+};
