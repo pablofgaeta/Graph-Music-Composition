@@ -1,9 +1,23 @@
+class GraphObj { 
+    static default_delay = 500;
+    constructor() {
+        this.selected = false;
+    }
+    select() { 
+        this.selected = true;
+    }
+    toggle_selected() {
+        this.selected = !this.selected;
+    };
+}
+
 /**
- * Abstract Node class with a selection state
+ * Base Node class, which includes a selection state and optional id
  * @param {*} id (optional) - Unique identifier for the GraphNode
  */
-class GraphNode {
+class GraphNode extends GraphObj {
     constructor(id = null) {
+        super();
         this.children = [];
         this.selected = false;
         this.id = id;
@@ -16,31 +30,24 @@ class GraphNode {
     has_child(node) {
         this.children.includes(node);
     }
-    select() { 
-        this.selected = true;
-    }
-    toggle_selected() {
-        this.selected = !this.selected;
-    };
 }
 
 /**
- *
- * @param {GraphNode} parent
- * @param {GraphNode} child
+ * Base Edge class, which includes a selected state.
+ * @param {GraphNode} parent : parent node of the desired edge
+ * @param {GraphNode} child : child node of the desired edge
  */
-class GraphEdge {
+class GraphEdge extends GraphObj {
     constructor(parent, child) {
+        super();
+        if ( !(parent instanceof GraphNode && child instanceof GraphNode) ) {
+            throw "GraphEdge only accepts GraphNode (or inherited objects)";
+        }
+
         this.parent = parent;
         this.child = child;
-        this.selected = false;
     }
-    select() { 
-        this.selected = true; 
-    }
-    toggle_selected() { 
-        this.selected = !this.selected; 
-    }
+    
     hash (parent_hash = this.parent.id, child_hash = this.child.id)  {
         if (parent_hash != child_hash)
             return parent_hash + '->' + child_hash;
@@ -58,8 +65,12 @@ class GraphEdge {
     }
 }
 
-class Graph {
+/**
+ * Graph class that interacts with GraphNode objects
+ */
+class Graph extends GraphObj{
     constructor() {
+        super();
         this.nodes = [];
         this.edges = {};
         this.next_id = 0;
@@ -76,23 +87,30 @@ class Graph {
      * Creates and registers new node to the graph.
      * @param {GraphNode} node - initial position of the node
      */
-    push_node(node) {
+    push_node(node, type = GraphNode) {
+        if ((typeof type) != 'function') throw "Improper node type given";
+        if ( !(node instanceof type) ) {
+            throw "Only accepts " + type.name + " (or derived classes).";
+        }
+
         node.id = this.__generate_id();
         this.nodes.push(node);
     };
 
     /**
-     * Creates a directed edge and registers key-value mapping by the edge's hash.
-     * @param {GraphNode} parent
-     * @param {GraphNode} child
+     * Pushes a directed edge and registers key-value mapping by the edge's hash.
+     * @param {GraphEdge} parent
      */
-    create_edge(parent, child) {
-        let new_edge = new GCMEdge(parent, child);
-        let eh = new_edge.hash();
+    push_edge(edge, type = GraphEdge) {
+        if ((typeof type) != 'function') throw "Improper edge type given";
+        if ( !(edge instanceof type) ) {
+            throw "Only accepts " + type.name + " (or derived classes).";
+        }
 
+        let eh = edge.hash();
         if (!this.edges.hasOwnProperty(eh)) {
-            parent.add_child(child);
-            this.edges[eh] = new_edge;
+            edge.parent.add_child(edge.child);
+            this.edges[eh] = edge;
         }
     };
 
@@ -115,14 +133,6 @@ class Graph {
      */
     selected_edges() { 
         this.edges.filter(edge => edge.selected); 
-    }
-
-    /**
-     * Uniformly alters the 'active' property of each node to 'state'.
-     * @param {bool} state - desired 'active' state
-     */
-    toggle_active(state) { 
-        this.nodes.forEach(node => { node.active = state; }); 
     }
 
     /**
@@ -167,48 +177,5 @@ class Graph {
                 delete this.edges[edge_hash];
             }
         }
-    }
-}
-
-
-/**
- * Custom Coordinate object to help type-check functions
- * @param {Number} x : x-position of the coordinate
- * @param {Number} y : y-position of the coordinate
- */
-class Coordinate {
-    constructor(x, y) {
-        this.x = x;
-        this.y = y;
-        this.set = (x, y) => { this.x = x; this.y = y; };
-        this.shift = (dx, dy) => { this.x += dx; this.y += dy; };
-    }
-}
-
-/**
- *
- * @param {Coordinate} position : Initial position of the VisualNode
- * @param {Number} id (optional) : Unique identifier for the VisualNode
- */
-class VisualNode extends GraphNode {
-    constructor(position, id = null) {
-        super(id);
-        if (!(position instanceof Coordinate)) throw "position must be a Coordinate instance";
-        this.position = position;
-    }
-    move(deltaX, deltaY) {
-        this.position.shift(deltaX, deltaY);
-    }
-}
-
-
-/**
- *
- * @param {GraphNode} parent
- * @param {GraphNode} child
- */
-class VisualEdge extends GraphEdge {
-    constructor(parent, child) {
-        super(parent, child);
     }
 }

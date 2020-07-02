@@ -95,7 +95,6 @@ let SynthPlayer = function(base_frequency = 440) {
         'base_frequency' : base_frequency
     });
     this.frequencies = [base_frequency];
-    this.animating = false;
 
     /**
      * Returns the Synth's note length in ms
