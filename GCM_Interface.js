@@ -1,10 +1,9 @@
 // Singleton to control the state of the Application
 let Interface = (function() {
-    let environment = new GraphController();
+    let environment = new GraphVisualizer();
     let gui = new dat.GUI();
 
     let current_mouse_position = new Coordinate(0,0);
-
 
     /********* STATE CONTROLLER *************/
     
@@ -19,6 +18,8 @@ let Interface = (function() {
     let multi_selection = false;
     let selection_start = null;
     let selection_end = null;
+
+    let menu_open = false;
 
 
     // Lambda functions for getting states of the interface
@@ -40,7 +41,7 @@ let Interface = (function() {
         mouse_down = true;
 
 
-        let existing_node = environment.hovering_node(mouse, 1);
+        let existing_node = environment.hovering_node(mouse);
         let existing_edge = environment.hovering_edge(mouse);
 
         // HANDLE DRAG INSTRUCTIONS
@@ -71,7 +72,9 @@ let Interface = (function() {
         }
         // IF IN CREATE MODE, CREATE NEW NODE
         else if (node_mode(event)){
-            environment.graph.create_node(mouse);
+            environment.graph.push_node(
+                new GCMNode(mouse, new SynthPlayer())
+            );
             environment.draw_graph();
         }
     }
@@ -86,7 +89,7 @@ let Interface = (function() {
         // IF REGISTERED EDGE DRAG
         if (creating_edge()) {
             environment.draw_graph();
-            let hover_self  = parent_node.is_hovering(mouse, environment.specs.radius);
+            let hover_self  = environment.over_node(parent_node, mouse);
             // DRAW TEMPORARY EDGE LINE IF IN EDGE MODE AND NOT OVER SELF
             if (edge_mode(event) && !hover_self) {
                 environment.draw_temp_edge(parent_node, mouse);
@@ -114,7 +117,7 @@ let Interface = (function() {
             event.clientY + window.pageYOffset
         );
         
-        let existing_node = environment.hovering_node(mouse, 1);
+        let existing_node = environment.hovering_node(mouse);
 
         // IF CONNECTED EDGE TO EDGE, CREATE CONNECTION
         if (can_finish_edge(existing_node)) {
@@ -128,10 +131,34 @@ let Interface = (function() {
         environment.draw_graph();
     };
 
+    let open_menus = [];
+
+    const spawn_menu = () => {
+        let sel_nodes = environment.graph.selected_nodes();
+        open_menus = [];
+        let folder, node, name;
+        for (let count = 0; count < sel_nodes.length; ++count) {
+            node = sel_nodes[count];
+            name = 'Node' + (count+1);
+            folder = gui.addFolder(name);
+            // folder.add(node.player, 'frequencies');
+            open_menus.push(folder);
+        }
+    }
+
+    const destroy_menus = () => {
+        open_menus.forEach(gui_folder => gui.removeFolder(gui_folder));
+    }
+
     document.onkeydown = (event) => {
         if (event.key == 'e') {
-            environment.spawn_menu(current_mouse_position);
+            menu_open = !menu_open;
+            if (menu_open) spawn_menu();
+            else destroy_menus();
         }
+        // if (event.key == 'k') {
+        //     environment.toggle_traversal(false);
+        // }
         if (event.key == 'x') {
             environment.trigger_selected();
         }
@@ -146,14 +173,15 @@ let Interface = (function() {
 
     let global_triggers = {
         'trigger-selected' : () => environment.trigger_selected(),
-        'kill-all'         : () => environment.kill()
+        'kill-traversal' : () => environment.toggle_traversal(false)
     };
 
     let graphicsSettings = environment.specs;
     let graphicscontrollers = [];
+    let g_trigs = {};
 
-    graphicscontrollers.push(gui.add(global_triggers, 'trigger-selected').name('Flood Trigger'));
-    graphicscontrollers.push(gui.add(global_triggers, 'kill-all').name('Kill Traversal'));
+    g_trigs['trigger-selected'] = gui.add(global_triggers, 'trigger-selected').name('Flood Trigger');
+    g_trigs['kill-traversal']   = gui.add(global_triggers, 'kill-traversal').name('Kill Traversal');
 
     let graphSpecs = gui.addFolder('Graphics Specs');
     let generalSpecs = graphSpecs.addFolder('General Specs');
@@ -179,9 +207,11 @@ let Interface = (function() {
     graphicscontrollers.push(idSpecs.add(graphicsSettings, 'idFontSize', 5, 80));
     graphicscontrollers.push(idSpecs.addColor(graphicsSettings, 'idColor'));
 
+    // Handle updates
     for (let ctrlr of graphicscontrollers) {
         ctrlr.onChange(() => environment.update_canvas());
     }
+
 
     gui.remember(graphicsSettings);
     
@@ -189,4 +219,6 @@ let Interface = (function() {
         'environment' : environment,
         'gui' : gui
     }
+
+    
 })();
