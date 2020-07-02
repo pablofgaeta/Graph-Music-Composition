@@ -1,3 +1,278 @@
+/**** BASE GRAPH IMPLEMENTATION ****/
+class GraphObj { 
+    static default_delay = 500;
+    constructor() {
+        this.selected = false;
+    }
+    select() { 
+        this.selected = true;
+    }
+    toggle_selected() {
+        this.selected = !this.selected;
+    };
+}
+
+/**
+ * Base Node class, which includes a selection state and optional id
+ * @param {*} id (optional) - Unique identifier for the GraphNode
+ */
+class GraphNode extends GraphObj {
+    constructor(id = null) {
+        super();
+        this.children = [];
+        this.selected = false;
+        this.id = id;
+    }
+
+    add_child(node) {
+        if (!this.has_child(node)) this.children.push(node);
+        else                       console.log("Child Already Exists");
+    }
+    has_child(node) {
+        this.children.includes(node);
+    }
+}
+
+/**
+ * Base Edge class, which includes a selected state.
+ * @param {GraphNode} parent : parent node of the desired edge
+ * @param {GraphNode} child : child node of the desired edge
+ */
+class GraphEdge extends GraphObj {
+    constructor(parent, child) {
+        super();
+        if ( !(parent instanceof GraphNode && child instanceof GraphNode) ) {
+            throw "GraphEdge only accepts GraphNode (or inherited objects)";
+        }
+
+        this.parent = parent;
+        this.child = child;
+    }
+    
+    hash (parent_hash = this.parent.id, child_hash = this.child.id)  {
+        if (parent_hash != child_hash)
+            return parent_hash + '->' + child_hash;
+        else
+            throw "Nodes not unique";
+    }
+    reverse_hash() {
+        return this.hash(this.child.id, this.parent.id);
+    }
+    static hash_from_nodes(parent_node, child_node) {
+        if (parent_node.id != child_node.id)
+            return parent_node.id + '->' + child_node.id;
+        else
+            throw "Nodes not unique";
+    }
+}
+
+/**
+ * Graph class that interacts with GraphNode objects
+ */
+class Graph extends GraphObj{
+    constructor() {
+        super();
+        this.nodes = [];
+        this.edges = {};
+        this.next_id = 0;
+    }
+
+    /**
+     * @returns Next available id for identifying nodes
+     */
+    __generate_id() {
+        return this.next_id++;
+    }
+
+    /**
+     * Creates and registers new node to the graph.
+     * @param {GraphNode} node - initial position of the node
+     */
+    push_node(node, type = GraphNode) {
+        if ((typeof type) != 'function') throw "Improper node type given";
+        if ( !(node instanceof type) ) {
+            throw "Only accepts " + type.name + " (or derived classes).";
+        }
+
+        node.id = this.__generate_id();
+        this.nodes.push(node);
+    };
+
+    /**
+     * Pushes a directed edge and registers key-value mapping by the edge's hash.
+     * @param {GraphEdge} parent
+     */
+    push_edge(edge, type = GraphEdge) {
+        if ((typeof type) != 'function') throw "Improper edge type given";
+        if ( !(edge instanceof type) ) {
+            throw "Only accepts " + type.name + " (or derived classes).";
+        }
+
+        let eh = edge.hash();
+        if (!this.edges.hasOwnProperty(eh)) {
+            edge.parent.add_child(edge.child);
+            this.edges[eh] = edge;
+        }
+    };
+
+    /**
+     * @returns bool : Are any nodes selected?
+     */
+    has_selected() { 
+        this.nodes.every(node => node.selected); 
+    }
+
+    /**
+     * @returns Array of selected nodes
+     */
+    selected_nodes() { 
+        this.nodes.filter(node => node.selected); 
+    }
+
+    /**
+     * @returns Array of selected Edges
+     */
+    selected_edges() { 
+        this.edges.filter(edge => edge.selected); 
+    }
+
+    /**
+     * Sets 'selected' property of each node and edge to false.
+     */
+    clear_selections() {
+        for (let node of this.nodes) {
+            node.selected = false;
+        }
+        for (let edge_hash in this.edges) {
+            this.edges[edge_hash].selected = false;
+        }
+    };
+
+    /**
+     * Removes all selected node (and all dependent edges) and selected edges.
+     */
+    delete_selected() {
+        let deleted_nodes = [];
+
+        // Remove any nodes first
+        for (let i = this.nodes.length - 1; i >= 0; --i) {
+            let node = this.nodes[i];
+            if (node.selected) {
+                // Remove node
+                deleted_nodes.push(this.nodes.splice(i, 1)[0]);
+
+                // Clean up lingering references to node
+                for (let potential_parent of this.nodes) {
+                    let i = potential_parent.children.indexOf(node);
+                    if (i != -1) potential_parent.children.splice(i, 1);
+                }
+            }
+        }
+        // Remove any selected edges or edges dependent on deleted nodes
+        for (let edge_hash in this.edges) {
+            let edge = this.edges[edge_hash];
+            if (edge.selected ||
+                deleted_nodes.includes(edge.parent) ||
+                deleted_nodes.includes(edge.child)) {
+                delete this.edges[edge_hash];
+            }
+        }
+    }
+}
+
+/**** DRAWING UTILITIES ****/
+
+// let spawn_menu = function() {
+//     var menu_gui = new dat.GUI({ autoPlace : false });
+//     menu_gui.width = this.specs.menuWidth;
+//     var menu = document.createElement('div');
+//     menu.className = 'menu';
+//     menu.style.top  = coord.y + 'px';
+//     menu.style.left = (coord.x - this.specs.menuWidth / 2) + 'px';
+//     document.body.appendChild(menu);
+//     menu.appendChild(menu_gui.domElement);
+//     this.menus.push(menu_gui);
+// }
+
+// const loadjson = async function(path) {
+//     let raw = await fetch(path);
+//     let json = await raw.json();
+//     return json;
+// }
+
+
+const GraphicsUtilities = (() => {
+    /**
+    * Draws a line with the given canvas context
+    * @param {Coordinate} coord1 - Start Point
+    * @param {Coordinate} coord2 - End point
+    * @param {Number} width (optional) - Line Width {Default = this.specs.edgeWidth}
+    * @param {String} color (optional) - Stroke Color {Default = this.specs.edgeColor}
+    */
+    const draw_line = function(p1, p2, context, width, color) {
+        context.beginPath();
+        context.moveTo(p1.x, p1.y);
+        context.lineTo(p2.x, p2.y);
+        context.lineWidth = width;
+        context.strokeStyle = color;
+        context.stroke();
+    }
+
+    const direction = (p1, p2) => {
+        return p1.x == p2.x ? Math.PI / 2 * (p2.y < p1.y ? 1 : -1) :
+                              Math.atan2((p1.y - p2.y) , (p1.x - p2.x));
+    };
+
+    // /**
+    //  * 
+    //  * @param {Coordinate} coord1 :
+    //  * @param {Coordinate} coord2 :
+    //  * @param {Number} width (optional) : 
+    //  */
+    // const draw_rect = function(p1, p2, width, color) {
+    //     let line = (a, b) => draw_line(a, b, width, color);
+
+    //     let tleft = new Coordinate( Math.min(p1.x, p2.x), Math.min(p1.y, p2.y) );
+    //     let bright = new Coordinate( Math.max(p1.x, p2.x), Math.max(p1.y, p2.y) );
+
+    //     draw_line(tleft, new Coordinate(bright.x, tleft.y));
+    //     draw_line(new Coordinate(bright.x, tleft.y), bright);
+    //     draw_line(bright, new Coordinate(tleft.x, bright.y));
+    //     line(new Coordinate(tleft.x, bright.y ), tleft);
+    // }
+
+    /**
+     * Each point given is assumed to be a circle with radius, r, and there is a line segment, L,
+     * connecting p1 to p2. Then finds The points (closest to each other) at the edge of each circle that fall on L.
+     * @param {Coordinate} p1 
+     * @param {Coordinate} p2 
+     * @returns [1st point on shortened L, 2nd point on shortened L, direction theta of vector.
+     */
+
+    const segment_minus_circles = (p1, p2, radius) => {
+        let theta = direction(p1, p2);
+        let scaleX = radius * Math.cos(theta);
+        let scaleY = radius * Math.sin(theta);
+
+        return [
+            new Coordinate(p1.x - scaleX, p1.y - scaleY),
+            new Coordinate(p2.x + scaleX, p2.y + scaleY),
+            theta
+        ];
+    }
+
+    const sleep = (milliseconds) => {
+        return new Promise(resolve => setTimeout(resolve, milliseconds))
+    }
+
+    return {
+        'draw_line' : draw_line,
+        'direction' : direction,
+        'segment_minus_circles' : segment_minus_circles,
+        'sleep' : sleep
+    };
+})();
+
 /**
  * Custom Coordinate object to help type-check functions
  * @param {Number} x : x-position of the coordinate
@@ -11,6 +286,8 @@ class Coordinate {
         this.shift = (dx, dy) => { this.x += dx; this.y += dy; };
     }
 }
+
+/**** VISUAL GRAPH IMPLEMENTATION ****/
 
 /**
  *
@@ -43,20 +320,19 @@ class VisualNode extends GraphNode {
     get duration() {
         return GraphObj.default_delay;
     }
-
     
     move(deltaX, deltaY) {
         this.position.shift(deltaX, deltaY);
     }
 
-    draw (context, animating=false) {
+    draw (context) {
         let x = this.position.x; 
         let y = this.position.y;
 
         context.beginPath();
         context.arc(x, y, VisualNode.settings.radius, 0, 2 * Math.PI);
         // Toggle fill color based on animation state
-        context.fillStyle = animating ? VisualNode.settings.activeColor : 
+        context.fillStyle = this.animating ? VisualNode.settings.activeColor : 
                                         VisualNode.settings.idleColor;
         // Draw border if selected
         if (this.selected) {
@@ -86,7 +362,7 @@ class VisualNode extends GraphNode {
     }
 }
 
-
+let count = 0;
 
 class VisualEdge extends GraphEdge {
     static settings = {
@@ -97,7 +373,7 @@ class VisualEdge extends GraphEdge {
     }
 
     static line(a, b, context, scale = 1, color = VisualEdge.settings.color) {
-        Graphics.draw_line(a, b, context, scale * VisualEdge.settings.width, color)
+        GraphicsUtilities.draw_line(a, b, context, scale * VisualEdge.settings.width, color)
     }
 
    /**
@@ -115,8 +391,12 @@ class VisualEdge extends GraphEdge {
         this.delay = delay;
     }
 
+    set_delay(ms) {
+        this.delay = ms;
+    }
+
     edge_boundaries() {
-        return Graphics.segment_minus_circles(
+        return GraphicsUtilities.segment_minus_circles(
             this.parent.position, this.child.position, VisualNode.settings.radius
         );
     }
@@ -261,6 +541,8 @@ class VisualGraph extends Graph {
         // Prevent playing when traversing is disabled
         if (!node.active) return;
 
+        console.log(++count);
+
         node.trigger();
         this.trigger_animation(node);
 
@@ -269,6 +551,8 @@ class VisualGraph extends Graph {
         node.children.forEach(child => {
             next_edge_hashes.push(GraphEdge.hash_from_nodes(node, child));
         });
+
+        console.log(next_edge_hashes);
 
         // Trigger recursive call to all forward edges from node
         for (let edge_hash of next_edge_hashes) {
@@ -289,13 +573,13 @@ class VisualGraph extends Graph {
     async trigger_animation(node) {
         node.animating = true;
         this.draw();
-        await sleep(node.duration);
+        await GraphicsUtilities.sleep(node.duration);
         node.animating = false;
         this.draw();
     }
 
     line(a, b, scale = 1, color = VisualEdge.settings.color) {
-        Graphics.draw_line(a, b, this.context, scale * VisualEdge.settings.width, color)
+        GraphicsUtilities.draw_line(a, b, this.context, scale * VisualEdge.settings.width, color)
     }
 
     /**

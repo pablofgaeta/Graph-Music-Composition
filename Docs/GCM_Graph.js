@@ -15,10 +15,6 @@ class GCMNode extends VisualNode {
         return this.player.duration();
     }
 
-    draw(context) {
-        super.draw(context, this.animating);
-    }
-
     trigger() {
         this.player.trigger();
     }
@@ -30,7 +26,7 @@ class GCMEdge extends VisualEdge {
         if (! (parent instanceof GCMNode && child instanceof GCMNode)) {
             throw "Only accepts GCMNode (or derived classes)";
         }
-        super(parent, child, drawing_context, parent.duration);
+        super(parent, child, drawing_context);
     }
 }
 
