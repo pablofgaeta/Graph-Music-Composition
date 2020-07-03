@@ -12,7 +12,11 @@ class GCMNode extends VisualNode {
     }
 
     get duration() {
-        return this.player.duration();
+        return this.player.duration;
+    }
+
+    get notes() {
+        return this.player.instrument.notes;
     }
 
     trigger() {

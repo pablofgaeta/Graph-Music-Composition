@@ -30,15 +30,9 @@ let GCMInterface = (function() {
     let can_finish_edge = (end_node) => creating_edge() && end_node && potential_edge_parent != end_node;
     let dragging = () => { return selection.move && mouse_down; }
     let just_mouse_pressed = (event) => { return !special(event) && mouse_down; }
-    let reset = () => {
-        selection.move = false;
-        mouse_down = false;
-        potential_edge_parent = null;
-        graph.draw();
-    };
 
     // Initialize canvas when loaded or resized
-    window.onresize = window.onload = () => { graph.draw();  };
+    window.onresize = window.onload = () => { graph.update();  };
 
     graph.canvas.onmousedown = (event) => {
         let mouse = new Coordinate( 
@@ -83,7 +77,6 @@ let GCMInterface = (function() {
             graph.push_node(
                 new GCMNode(mouse, new SynthPlayer(), graph.context)
             );
-            graph.draw();
         }
     }
 
@@ -106,7 +99,6 @@ let GCMInterface = (function() {
         // First check if should move selection
         else if (dragging()) {
             graph.move_selected(new Coordinate(event.movementX, event.movementY));
-            graph.draw();
         }
 
         // Now check if creating multi-selection box
@@ -128,14 +120,16 @@ let GCMInterface = (function() {
 
         // IF CONNECTED EDGE TO EDGE, CREATE CONNECTION
         if (can_finish_edge(hovered_node)) {
-            let edge = new GCMEdge(
-                potential_edge_parent, hovered_node, graph.context
+            graph.push_edge(
+                new GCMEdge( potential_edge_parent, hovered_node, graph.context )
             );
-            graph.push_edge(edge);
         }
     
         // Ensure Graph state resets to idle state
-        reset();
+        selection.move = false;
+        mouse_down = false;
+        potential_edge_parent = null;
+        graph.draw();
     };
 
     document.addEventListener('keydown', (event) => {
@@ -162,16 +156,26 @@ let GCMInterface = (function() {
     /***** GUI CONTROLS *******/
 
     let gui = new dat.GUI();
+    gui.domElement.onkeypress = () => {};
     let open_menus = [];
 
     const spawn_menu = () => {
-        let sel_nodes = graph.selected_nodes();
         open_menus = [];
         let folder, node, name;
-        for (let count = 0; count < sel_nodes.length; ++count) {
-            node = sel_nodes[count];
-            name = 'Node' + (count+1);
+        for (let count = 0; count < graph.selected_nodes.length; ++count) {
+            node = graph.selected_nodes[count];
+            name = 'Node ' + node.id;
             folder = gui.addFolder(name);
+            if ( !(node instanceof GCMNode) ) throw "Menu only allowed for GCM Nodes";
+            if (node.player instanceof SynthPlayer) {
+                for (let note_idx = 0; note_idx < node.notes.length; ++note_idx) {
+                    folder.add(node.player.note_states, note_idx)
+                          .name('freq ' + note_idx)
+                          .onChange( (state) => { node.player.update_note_inclusion(note_idx, state); }
+                    );
+                    // folder.add(node.player.playing_notes, freq_idx, 1, 1000).name('freq ' + freq_idx);
+                }
+            }
             // folder.add(node.player, 'frequencies');
             open_menus.push(folder);
         }
@@ -180,7 +184,6 @@ let GCMInterface = (function() {
     const destroy_menus = () => {
         open_menus.forEach(gui_folder => gui.removeFolder(gui_folder));
     }
-
     
 
     let global_triggers = {
@@ -225,7 +228,7 @@ let GCMInterface = (function() {
 
     // Handle updates
     for (let ctrlr of graphicscontrollers) {
-        ctrlr.onChange(() => graph.draw());
+        ctrlr.onChange(() => graph.update());
     }
 
     gui.remember(GraphicsSettings);

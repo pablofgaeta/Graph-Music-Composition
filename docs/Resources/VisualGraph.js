@@ -119,21 +119,21 @@ class Graph extends GraphObj{
      * @returns bool : Are any nodes selected?
      */
     has_selected() { 
-        this.nodes.every(node => node.selected); 
+        return this.nodes.every(node => node.selected); 
     }
 
     /**
      * @returns Array of selected nodes
      */
-    selected_nodes() { 
-        this.nodes.filter(node => node.selected); 
+    get selected_nodes() { 
+        return this.nodes.filter(node => node.selected); 
     }
 
     /**
      * @returns Array of selected Edges
      */
-    selected_edges() { 
-        Object.values(this.edges).filter(edge => edge.selected); 
+    get selected_edges() { 
+        return Object.values(this.edges).filter(edge => edge.selected); 
     }
 
     /**
@@ -194,12 +194,6 @@ class Graph extends GraphObj{
 //     this.menus.push(menu_gui);
 // }
 
-// const loadjson = async function(path) {
-//     let raw = await fetch(path);
-//     let json = await raw.json();
-//     return json;
-// }
-
 
 const GraphicsUtilities = (() => {
     /**
@@ -223,23 +217,23 @@ const GraphicsUtilities = (() => {
                               Math.atan2((p1.y - p2.y) , (p1.x - p2.x));
     };
 
-    // /**
-    //  * 
-    //  * @param {Coordinate} coord1 :
-    //  * @param {Coordinate} coord2 :
-    //  * @param {Number} width (optional) : 
-    //  */
-    // const draw_rect = function(p1, p2, width, color) {
-    //     let line = (a, b) => draw_line(a, b, width, color);
+    /**
+     * 
+     * @param {Coordinate} coord1 :
+     * @param {Coordinate} coord2 :
+     * @param {Number} width (optional) : 
+     */
+    const draw_rect = function(p1, p2, width, color) {
+        let line = (a, b) => draw_line(a, b, width, color);
 
-    //     let tleft = new Coordinate( Math.min(p1.x, p2.x), Math.min(p1.y, p2.y) );
-    //     let bright = new Coordinate( Math.max(p1.x, p2.x), Math.max(p1.y, p2.y) );
+        let tleft = new Coordinate( Math.min(p1.x, p2.x), Math.min(p1.y, p2.y) );
+        let bright = new Coordinate( Math.max(p1.x, p2.x), Math.max(p1.y, p2.y) );
 
-    //     draw_line(tleft, new Coordinate(bright.x, tleft.y));
-    //     draw_line(new Coordinate(bright.x, tleft.y), bright);
-    //     draw_line(bright, new Coordinate(tleft.x, bright.y));
-    //     line(new Coordinate(tleft.x, bright.y ), tleft);
-    // }
+        line(tleft, new Coordinate(bright.x, tleft.y));
+        line(new Coordinate(bright.x, tleft.y), bright);
+        line(bright, new Coordinate(tleft.x, bright.y));
+        line(new Coordinate(tleft.x, bright.y ), tleft);
+    }
 
     /**
      * Each point given is assumed to be a circle with radius, r, and there is a line segment, L,
@@ -267,6 +261,7 @@ const GraphicsUtilities = (() => {
 
     return {
         'draw_line' : draw_line,
+        'draw_rect' : draw_rect,
         'direction' : direction,
         'segment_minus_circles' : segment_minus_circles,
         'sleep' : sleep
@@ -361,8 +356,6 @@ class VisualNode extends GraphNode {
         return Math.hypot(x,y) <= VisualNode.settings.radius * scale;
     }
 }
-
-let count = 0;
 
 class VisualEdge extends GraphEdge {
     static settings = {
@@ -499,6 +492,7 @@ class VisualGraph extends Graph {
      */
     push_node(node) {
         super.push_node(node, VisualNode);
+        this.draw();
     }
 
     /**
@@ -507,6 +501,7 @@ class VisualGraph extends Graph {
      */
     push_edge(edge) {
         super.push_edge(edge, VisualEdge);
+        this.draw();
     }
 
     delete_selected() {
@@ -541,8 +536,6 @@ class VisualGraph extends Graph {
         // Prevent playing when traversing is disabled
         if (!node.active) return;
 
-        console.log(++count);
-
         node.trigger();
         this.trigger_animation(node);
 
@@ -551,8 +544,6 @@ class VisualGraph extends Graph {
         node.children.forEach(child => {
             next_edge_hashes.push(GraphEdge.hash_from_nodes(node, child));
         });
-
-        console.log(next_edge_hashes);
 
         // Trigger recursive call to all forward edges from node
         for (let edge_hash of next_edge_hashes) {
@@ -667,6 +658,9 @@ class VisualGraph extends Graph {
                 node.move(deltaCoord.x, deltaCoord.y);
             }
         });
+
+        // update canvas
+        this.draw();
     }
 
     /**
@@ -713,5 +707,6 @@ class VisualGraph extends Graph {
         this.canvas.style.background = VisualGraph.settings.background;
         this.canvas.width  = (window.innerWidth * VisualGraph.settings.width).toString();
         this.canvas.height = (window.innerHeight * VisualGraph.settings.height).toString();
+        this.draw();
     }
 }
