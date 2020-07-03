@@ -133,7 +133,7 @@ class Graph extends GraphObj{
      * @returns Array of selected Edges
      */
     selected_edges() { 
-        this.edges.filter(edge => edge.selected); 
+        Object.values(this.edges).filter(edge => edge.selected); 
     }
 
     /**
@@ -160,12 +160,6 @@ class Graph extends GraphObj{
             if (node.selected) {
                 // Remove node
                 deleted_nodes.push(this.nodes.splice(i, 1)[0]);
-
-                // Clean up lingering references to node
-                for (let potential_parent of this.nodes) {
-                    let i = potential_parent.children.indexOf(node);
-                    if (i != -1) potential_parent.children.splice(i, 1);
-                }
             }
         }
         // Remove any selected edges or edges dependent on deleted nodes
@@ -174,7 +168,13 @@ class Graph extends GraphObj{
             if (edge.selected ||
                 deleted_nodes.includes(edge.parent) ||
                 deleted_nodes.includes(edge.child)) {
+                // Remove direct reference to edge
                 delete this.edges[edge_hash];
+
+                // Clean up lingering references to child by parent
+                let child_pos = edge.parent.children.indexOf(edge.child);
+                if (child_pos != -1)
+                    edge.parent.children.splice(child_pos, 1);
             }
         }
     }
