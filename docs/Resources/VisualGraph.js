@@ -198,10 +198,11 @@ class Graph extends GraphObj{
 const GraphicsUtilities = (() => {
     /**
     * Draws a line with the given canvas context
-    * @param {Coordinate} coord1 - Start Point
-    * @param {Coordinate} coord2 - End point
-    * @param {Number} width (optional) - Line Width {Default = this.specs.edgeWidth}
-    * @param {String} color (optional) - Stroke Color {Default = this.specs.edgeColor}
+    * @param {Coordinate} p1 - Start Point
+    * @param {Coordinate} p2 - End point
+    * @param {CanvasRenderingContext2D} : Context in which to draw line
+    * @param {Number} width : Line Width
+    * @param {String} color : Stroke Color
     */
     const draw_line = function(p1, p2, context, width, color) {
         context.beginPath();
@@ -212,28 +213,15 @@ const GraphicsUtilities = (() => {
         context.stroke();
     }
 
-    const direction = (p1, p2) => {
-        return p1.x == p2.x ? Math.PI / 2 * (p2.y < p1.y ? 1 : -1) :
-                              Math.atan2((p1.y - p2.y) , (p1.x - p2.x));
-    };
-
     /**
-     * 
-     * @param {Coordinate} coord1 :
-     * @param {Coordinate} coord2 :
-     * @param {Number} width (optional) : 
+     * Returns the direction of the vector from p1 to p2, interpreting p1 as the origin
+     * @param {Coordinate} p1 : Start Point
+     * @param {Coordinate} p2 : End Point
      */
-    const draw_rect = function(p1, p2, width, color) {
-        let line = (a, b) => draw_line(a, b, width, color);
-
-        let tleft = new Coordinate( Math.min(p1.x, p2.x), Math.min(p1.y, p2.y) );
-        let bright = new Coordinate( Math.max(p1.x, p2.x), Math.max(p1.y, p2.y) );
-
-        line(tleft, new Coordinate(bright.x, tleft.y));
-        line(new Coordinate(bright.x, tleft.y), bright);
-        line(bright, new Coordinate(tleft.x, bright.y));
-        line(new Coordinate(tleft.x, bright.y ), tleft);
-    }
+    const direction = (p1, p2) => {
+        let dir = p1.x == p2.x ? Math.PI / 2 * (p1.y > p2.y ? 1 : -1) : Math.atan2(p1.y - p2.y, p2.x - p1.x);
+        return dir;
+    };
 
     /**
      * Each point given is assumed to be a circle with radius, r, and there is a line segment, L,
@@ -249,8 +237,8 @@ const GraphicsUtilities = (() => {
         let scaleY = radius * Math.sin(theta);
 
         return [
-            new Coordinate(p1.x - scaleX, p1.y - scaleY),
-            new Coordinate(p2.x + scaleX, p2.y + scaleY),
+            new Coordinate(p1.x + scaleX, p1.y - scaleY),
+            new Coordinate(p2.x - scaleX, p2.y + scaleY),
             theta
         ];
     }
@@ -261,7 +249,6 @@ const GraphicsUtilities = (() => {
 
     return {
         'draw_line' : draw_line,
-        'draw_rect' : draw_rect,
         'direction' : direction,
         'segment_minus_circles' : segment_minus_circles,
         'sleep' : sleep
@@ -280,6 +267,9 @@ class Coordinate {
         this.set = (x, y) => { this.x = x; this.y = y; };
         this.shift = (dx, dy) => { this.x += dx; this.y += dy; };
     }
+    valueOf() {
+        return "(" + this.x + ', ' + this.y + ')';
+    }
 }
 
 /**** VISUAL GRAPH IMPLEMENTATION ****/
@@ -287,7 +277,6 @@ class Coordinate {
 /**
  *
  * @param {Coordinate} position : Initial position of the VisualNode
- * @param {CanvasRenderingContext2D} drawing_context : Context in which to draw on { Default : null }
  * @param {Number} id (optional) : Unique identifier for the VisualNode { Default : null }
  */
 class VisualNode extends GraphNode {
@@ -311,15 +300,23 @@ class VisualNode extends GraphNode {
         this.animating = false;
     }
 
-    // Default duration is 500ms
     get duration() {
         return GraphObj.default_delay;
     }
     
+    /**
+     * 
+     * @param {Coordinate} deltaX : change in x-axis
+     * @param {Coordinate} deltaY : change in y-axis
+     */
     move(deltaX, deltaY) {
         this.position.shift(deltaX, deltaY);
     }
 
+    /**
+     * 
+     * @param {CanvasRenderingContext2D} drawing_context : Context in which to draw on
+     */
     draw (context) {
         let x = this.position.x; 
         let y = this.position.y;
@@ -394,6 +391,10 @@ class VisualEdge extends GraphEdge {
         );
     }
 
+    /**
+     * 
+     * @param {CanvasRenderingContext2D} context : Context in which to draw edge
+     */
     draw(context) {
         let edge_coords = this.edge_boundaries();
         if (this.selected) {
@@ -414,20 +415,21 @@ class VisualEdge extends GraphEdge {
         let edge_coords = this.edge_boundaries();
         let x1 = edge_coords[0].x; let x2 = edge_coords[1].x;
         let y1 = edge_coords[0].y; let y2 = edge_coords[1].y;
+        let theta = edge_coords[2];
     
         let length = Math.hypot(x2 - x1, y2 - y1) / 3;
     
         let start_point = new Coordinate(
-            x1 - length * Math.cos(edge_coords[2]),
-            y1 - length * Math.sin(edge_coords[2])
+            x1 + length * Math.cos(theta),
+            y1 - length * Math.sin(theta)
         );
 
         let end_points = [
-            new Coordinate(start_point.x + VisualEdge.settings.arrowLen * Math.cos(edge_coords[2] + Math.PI/4),
-                            start_point.y + VisualEdge.settings.arrowLen * Math.sin(edge_coords[2] + Math.PI/4) 
+            new Coordinate(start_point.x - VisualEdge.settings.arrowLen * Math.cos(theta + Math.PI/4),
+                           start_point.y + VisualEdge.settings.arrowLen * Math.sin(theta + Math.PI/4) 
             ),
-            new Coordinate(start_point.x + VisualEdge.settings.arrowLen * Math.cos(edge_coords[2] - Math.PI/4),
-                            start_point.y + VisualEdge.settings.arrowLen * Math.sin(edge_coords[2] - Math.PI/4)
+            new Coordinate(start_point.x - VisualEdge.settings.arrowLen * Math.cos(theta - Math.PI/4),
+                            start_point.y + VisualEdge.settings.arrowLen * Math.sin(theta - Math.PI/4)
             )
         ];
         return {'start' : start_point, 'ends' : end_points};

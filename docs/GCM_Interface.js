@@ -75,7 +75,7 @@ let GCMInterface = (function() {
         // IF IN CREATE MODE, CREATE NEW NODE
         else if (node_mode(event)){
             graph.push_node(
-                new GCMNode(mouse, new SynthPlayer(), graph.context)
+                new GCMNode(mouse, graph.context, 'synth')
             );
         }
     }
@@ -135,7 +135,7 @@ let GCMInterface = (function() {
     document.addEventListener('keydown', (event) => {
         if (event.key == 'e') {
             menu_open = !menu_open;
-            if (menu_open) spawn_menu();
+            if (menu_open) graph.spawn_menus(gui);
             else destroy_menus();
         }
         if (event.key == 'k') {
@@ -159,27 +159,6 @@ let GCMInterface = (function() {
     gui.domElement.onkeypress = () => {};
     let open_menus = [];
 
-    const spawn_menu = () => {
-        open_menus = [];
-        let folder, node, name;
-        for (let count = 0; count < graph.selected_nodes.length; ++count) {
-            node = graph.selected_nodes[count];
-            name = 'Node ' + node.id;
-            folder = gui.addFolder(name);
-            if ( !(node instanceof GCMNode) ) throw "Menu only allowed for GCM Nodes";
-            if (node.player instanceof SynthPlayer) {
-                for (let note_idx = 0; note_idx < node.notes.length; ++note_idx) {
-                    folder.add(node.player.note_states, note_idx)
-                          .name('freq ' + note_idx)
-                          .onChange( (state) => { node.player.update_note_inclusion(note_idx, state); }
-                    );
-                    // folder.add(node.player.playing_notes, freq_idx, 1, 1000).name('freq ' + freq_idx);
-                }
-            }
-            // folder.add(node.player, 'frequencies');
-            open_menus.push(folder);
-        }
-    }
 
     const destroy_menus = () => {
         open_menus.forEach(gui_folder => gui.removeFolder(gui_folder));
@@ -187,8 +166,9 @@ let GCMInterface = (function() {
     
 
     let global_triggers = {
+        'add-samples'      : () => AudioFileManager.add(),
         'trigger-selected' : () => graph.trigger_selected(),
-        'kill-traversal' : () => graph.toggle_active(false)
+        'kill-traversal'   : () => graph.toggle_active(false)
     };
 
     let GraphicsSettings = VisualGraph.settings;
@@ -197,6 +177,7 @@ let GCMInterface = (function() {
 
     let graphicscontrollers = [];
 
+    graphicscontrollers.push(gui.add(global_triggers, 'add-samples').name('Import samples'));
     graphicscontrollers.push(gui.add(global_triggers, 'trigger-selected').name('Flood Trigger'));
     graphicscontrollers.push(gui.add(global_triggers, 'kill-traversal').name('Kill Traversal'));
 
