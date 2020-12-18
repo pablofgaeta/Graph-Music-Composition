@@ -6,8 +6,8 @@
  * @param {Number} id (optional) - Identifier used to uniquely identify a node
  */
 class GCMNode extends VisualNode {
-    constructor(position, drawing_context, type = 'synth', id = null) {
-        super(position, id, drawing_context);
+    constructor(position, type = 'sample', id = null, displayText='kick') {
+        super(position, id, displayText);
         this.set_player_type(type);
         this.active = true;
     }
@@ -17,14 +17,18 @@ class GCMNode extends VisualNode {
         this.type = type;
         switch(type) {
             case 'synth' :
-                this.player = new SynthPlayer();
+                this.player = new GCMSynth();
                 break
             case 'sample' :
-                this.player = new SamplePlayer();
+                this.player = new GCMSampler(this.displayText);
                 break;
             default :
                 throw type + " is not a supported type.";
         }
+    }
+
+    get name() {
+        return "Node " + this.id;
     }
 
     get duration() {
@@ -37,14 +41,6 @@ class GCMNode extends VisualNode {
 
     trigger() {
         this.player.trigger();
-    }
-
-    /**
-     * Spawn an option menu to control the selected nodes on a graph
-     * @param {dat.GUI} gui 
-     */
-    spawn_menu(gui) {
-        return this.player.spawn_menu(gui, 'Node ' + this.id);
     }
 }
 
@@ -67,25 +63,39 @@ class GCMGraph extends VisualGraph {
      */
     constructor(canvas = null) {
         super(canvas);
+        this.open_menus = {};
     }
 
     /**
      * Pushes a node to the GCMGraph
      * @param {GCMNode} parent
      */
-    push_node(node) {
-        super.push_node(node, GCMNode);
+    create_node(position, type) {
+        super.push_node(new GCMNode(position, type), GCMNode);
     }
 
     /**
      * Pushes a directed edge and registers key-value mapping by the edge's hash.
      * @param {GCMEdge} parent
      */
-    push_edge(edge) {
-        super.push_edge(edge, GCMEdge);
+    create_edge(parent, child) {
+        super.push_edge(new GCMEdge(parent, child), GCMEdge);
     }
 
-    spawn_menus(gui) {
-        this.selected_nodes.forEach(node => node.spawn_menu(gui));
+    toggle_samples(toSampleNum) {
+        this.selected_nodes.forEach(node => {
+            if (node.type == 'sample') {
+                const sampleIndex = Math.min(AudioFileManager.files.length, toSampleNum)
+                if (sampleIndex > 0) {
+                    node.displayText = AudioFileManager.files[sampleIndex - 1];
+                    node.player.set_sample(node.displayText);
+                }
+                else {
+                    console.log(`Sample index (${toSampleNum})`);
+                    console.log(`Must be in range 0 < x < ${AudioFileManager.files.length}`);
+                }
+            }
+        });
+        super.draw();
     }
 }

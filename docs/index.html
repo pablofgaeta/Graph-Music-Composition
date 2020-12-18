@@ -1,23 +1,39 @@
 <!doctype HTML>
 <html>
   <head>
-    <title>Graph Music Composition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; worker-src blob:;">
+    <meta http-equiv="X-Content-Security-Policy" content="default-src 'self'; script-src 'self'; worker-src blob:;";>
 
-    <!-- STYLES -->
+    <title>Graph Music Composition</title>
     <link rel='stylesheet' href='main.css'></link>
 
-    <!-- LIBRARIES -->
     <script src='External_Libraries/Tone.js'></script>
-    <script src='External_Libraries/dat.gui.min.js'></script>
+    <script src='Resources/VisualGraph.js'></script>
+    <script src='GCM_Graph.js'></script>
+    <script src='GCM_Audio.js'></script>
+    <script src='GCM_Interface.js' defer></script>
   </head>
 
   <body>
-    <!-- <input id = 'sample_input' accept='audio/*' style='display : none;'></input> -->
-    <!-- SCRIPTS -->
-    <script src='Resources/VisualGraph.js'></script>
-    <script src='GCM_Audio.js'></script>
-    <script src='GCM_Graph.js'></script>
-    <script src='GCM_Interface.js'></script>
+    <div id='title-container' class='title-container'>
+      <!-- <div class='txt-l blue title'>Graph Music Composition</div> -->
+      <div class="sidenav">
+        <div id='edit-mode-container'>
+          <div class='txt-m black centeralign'>GMC Toolkit</div>
+          <div class='rule'></div>
+          <div id='edit-mode-selector' class='txt-m section-selector leftalign'>Edit Modes</div>
+          <div id='edit-mode-choices-container'>
+            <div class='txt-s section-sub-choice'>- Nodes</div>
+            <div class='txt-s section-sub-choice'>- Edges</div>
+            <div class='txt-s section-sub-choice'>- Nothing</div>
+          </div>
+        </div>
+        <div id='samples-container' class='samples-container'>
+          <div id='samples-selector' class='txt-m section-selector leftalign'>Samples</div>
+          <div id='samples-choices-container'></div>
+        </div>
+      </div>
+    </div>
   </body>
-  
 </html>

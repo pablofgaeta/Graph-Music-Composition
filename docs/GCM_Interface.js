@@ -1,8 +1,16 @@
-// Singleton to control the state of the Application
-let GCMInterface = (function() {
-    let graph = new GCMGraph();
+const Styles = {
+    blue : '#89cff0', white : '#ffffff', gray : '#9a9a9a', yellow : '#fdfd96', red : '#e19191', green : '#86eda6', lightGray : '#a5a5a5a5', black : '#000000',
+    ucsc : {
+        blue : '#003c6c', lightBlue : '#13a5dc', yellow : '#ffde66', green : '#93c02d', pink : '#da216daa', lightPink : '#f05d9a'
+    },
+    surveyjs : {
+        "lightGreen" : "#1ab395", "darkNavy" : "#2A414C"
+    }
+};
 
-    let current_mouse_position = new Coordinate(0,0);
+// Singleton to control the state of the Application
+const GCMInterface = (function() {
+    let graph = new GCMGraph();
 
     /********* STATE CONTROLLER *************/
     
@@ -15,30 +23,31 @@ let GCMInterface = (function() {
     // Selection states object
     let selection = {
         move : false,
-        multi : false,
         start : null,
-        end : null
     }
-    let menu_open = false;
 
     // Lambda functions for getting states of the interface
-    let special = (mouseEvent) => mouseEvent.shiftKey || mouseEvent.metaKey || mouseEvent.ctrlKey || mouseEvent.altKey;
-    let edge_mode = (mouseEvent) => mouseEvent.shiftKey; 
-    let node_mode = (mouseEvent) => mouseEvent.metaKey;
-    let extend_selection_mode = (mouseEvent) => mouseEvent.altKey;
-    let creating_edge = () => mouse_down && potential_edge_parent;
-    let can_finish_edge = (end_node) => creating_edge() && end_node && potential_edge_parent != end_node;
-    let dragging = () => { return selection.move && mouse_down; }
-    let just_mouse_pressed = (event) => { return !special(event) && mouse_down; }
+    const special = (mouseEvent) => mouseEvent.shiftKey || mouseEvent.metaKey || mouseEvent.ctrlKey || mouseEvent.altKey;
+    const edge_mode = (mouseEvent) => mouseEvent.altKey; 
+    const node_mode = (mouseEvent) => mouseEvent.metaKey;
+    const extend_selection_mode = (mouseEvent) => mouseEvent.shiftKey;
+    const creating_edge = () => mouse_down && potential_edge_parent;
+    const can_finish_edge = (end_node) => creating_edge() && end_node && potential_edge_parent != end_node;
+    const dragging = () => { return selection.move && mouse_down; }
+    const just_mouse_pressed = (event) => { return !special(event) && mouse_down; }
 
     // Initialize canvas when loaded or resized
-    window.onresize = window.onload = () => { graph.update();  };
+    window.onresize = window.onload = () => { graph.update(); };
+
+    const TitleContainer = document.querySelector('#title-container');
+    const compute_client_coords = (event) => new Coordinate( 
+        event.clientX + window.pageXOffset,  
+        event.clientY + window.pageYOffset - parseInt(TitleContainer.clientHeight)
+    );
+    let current_mouse_position = compute_client_coords({clientX : 0, clientY : 0});
 
     graph.canvas.onmousedown = (event) => {
-        let mouse = new Coordinate( 
-            event.clientX + window.pageXOffset,  
-            event.clientY + window.pageYOffset
-        );
+        let mouse = compute_client_coords(event);
         mouse_down = true;
 
         let hovered_node = graph.hovering_node(mouse);
@@ -52,77 +61,71 @@ let GCMInterface = (function() {
                 // Movable if currently hovering a node
                 selection.move = hovered_node ? true : false;
 
-                // Clear any current selections and make new selection
-                graph.clear_selections();
-                if (hovered_node) hovered_node.select();
-                if (hovered_edge) hovered_edge.select();
+                if (graph.selected_nodes.length <= 1) {
+                    console.log("Clear selections and make instantaneous selection");
+                    // Clear any current selections and make new selection
+                    graph.clear_selections();
+                    if (hovered_node) hovered_node.select();
+                    if (hovered_edge) hovered_edge.select();
+                }
             }
             // RESET SELECTION STATE
             else {
+                console.log("reset selection");
                 graph.clear_selections();
-                selection.multi = false;
             }
         }
         // ALLOW MANUAL TOGGLING OF NODES
         else if (extend_selection_mode(event)) {
+            console.log("manual node selection extension");
             if (hovered_node) hovered_node.toggle_selected();
             if (hovered_edge) hovered_edge.toggle_selected();
         }
         // REGISTER SELECTED STARTING NODE
         else if (edge_mode(event) && hovered_node) {
+            console.log("set potential edge parent");
             potential_edge_parent = hovered_node;
         }
         // IF IN CREATE MODE, CREATE NEW NODE
         else if (node_mode(event)){
-            graph.push_node(
-                new GCMNode(mouse, graph.context, 'synth')
-            );
+            console.log("create new node");
+            graph.create_node(mouse);
         }
     }
 
     graph.canvas.onmousemove = (event) => {
-        let mouse = new Coordinate( 
-            event.clientX + window.pageXOffset,  
-            event.clientY + window.pageYOffset
-        );
+        let mouse = compute_client_coords(event);
         current_mouse_position.set(mouse.x, mouse.y);
 
-        // IF REGISTERED EDGE DRAG
-        if (creating_edge()) {
-            let hover_self  = potential_edge_parent.hovering(mouse);
-            // DRAW TEMPORARY EDGE LINE IF IN EDGE MODE AND NOT OVER SELF
-            if (edge_mode(event) && !hover_self) {
-                graph.draw_temporary_edge(potential_edge_parent, mouse);
-            }
-        }
-
         // First check if should move selection
-        else if (dragging()) {
+        if (dragging()) {
             graph.move_selected(new Coordinate(event.movementX, event.movementY));
         }
 
         // Now check if creating multi-selection box
         // Note that if dragging() multi-select can not get called
         else if ( just_mouse_pressed(event) ) {
-            selection.end = mouse;
-            selection.multi = true;
-            graph.select_in_rect(selection.start, selection.end);
+            graph.select_in_rect(selection.start, mouse);
+        }
+
+        // IF REGISTERED EDGE DRAG
+        else if (creating_edge()) {
+            let hover_self  = potential_edge_parent.hovering(mouse);
+            // DRAW TEMPORARY EDGE LINE IF IN EDGE MODE AND NOT OVER SELF
+            if (edge_mode(event) && !hover_self) {
+                graph.draw_temporary_edge(potential_edge_parent, mouse);
+            }
         }
     }
 
     graph.canvas.onmouseup = (event) => {
-        let mouse = new Coordinate(
-            event.clientX + window.pageXOffset, 
-            event.clientY + window.pageYOffset
-        );
+        let mouse = compute_client_coords(event);
         
         let hovered_node = graph.hovering_node(mouse);
 
         // IF CONNECTED EDGE TO EDGE, CREATE CONNECTION
         if (can_finish_edge(hovered_node)) {
-            graph.push_edge(
-                new GCMEdge( potential_edge_parent, hovered_node, graph.context )
-            );
+            graph.create_edge(potential_edge_parent, hovered_node);
         }
     
         // Ensure Graph state resets to idle state
@@ -132,11 +135,48 @@ let GCMInterface = (function() {
         graph.draw();
     };
 
+
+    const SampleChoicesContainer = document.querySelector('#samples-choices-container');
+    (async function() {
+        for (const sample of ['kick', 'snare', 'hihat', 'tom', 'cowbell']) {
+            try {
+                const sample_file = await fetch(`./Resources/drums/${sample}.wav`);
+                AudioFileManager.add(sample, sample_file.url);
+                const new_sample_bar = document.createElement('div');
+                new_sample_bar.addEventListener('click', () => {
+                    AudioFileManager.play(sample);
+                })
+                new_sample_bar.className = 'txt-s section-sub-choice';
+                new_sample_bar.innerHTML = `- ${sample}`;
+                SampleChoicesContainer.appendChild(new_sample_bar);
+            } catch (e) {console.error(e)}
+        }
+    })();
+
+    for(const section of ['edit-mode', 'samples']) {
+        const SectionChoices = Array.from(document.querySelectorAll(`#${section}-choices-container > *`));
+        SectionChoices.forEach((choice) => {
+            console.log(choice);
+            choice.addEventListener('click', () => {
+                console.log(`Choosing edit mode : ${choice.innerHTML}`);
+                SectionChoices.forEach(reset_choice => {reset_choice.style.color = Styles.gray});
+                choice.style.color = Styles.black;
+            });
+        })
+
+        document.querySelector(`#${section}-selector`).addEventListener('click', () => {
+            const EMChoicesContainer = document.querySelector(`#${section}-choices-container`);
+            EMChoicesContainer.style.display = EMChoicesContainer.style.display === 'flex' ? 'none' : 'flex';
+        });
+    }
+
     document.addEventListener('keydown', (event) => {
+        if (!isNaN(event.key)) {
+            console.log(graph.selected_nodes);
+            graph.toggle_samples(Number(event.key));
+        }
         if (event.key == 'e') {
-            menu_open = !menu_open;
-            if (menu_open) graph.spawn_menus(gui);
-            else destroy_menus();
+            // graph.toggle_menus(gui);
         }
         if (event.key == 'k') {
             graph.toggle_active(false);
@@ -146,81 +186,8 @@ let GCMInterface = (function() {
         }
         if (event.key == 'Backspace' || event.key == 'Delete') {
             graph.delete_selected();
-
-            // Ensure idle selection state
-            selection.multi = false;
         }
     });
 
-
-    /***** GUI CONTROLS *******/
-
-    let gui = new dat.GUI();
-    gui.domElement.onkeypress = () => {};
-    let open_menus = [];
-
-
-    const destroy_menus = () => {
-        open_menus.forEach(gui_folder => gui.removeFolder(gui_folder));
-    }
-    
-
-    let global_triggers = {
-        'add-samples'      : () => AudioFileManager.add(),
-        'trigger-selected' : () => graph.trigger_selected(),
-        'kill-traversal'   : () => graph.toggle_active(false)
-    };
-
-    let GraphicsSettings = VisualGraph.settings;
-    let NodeSettings = GCMNode.settings;
-    let EdgeSettings = GCMEdge.settings;
-
-    let graphicscontrollers = [];
-
-    graphicscontrollers.push(gui.add(global_triggers, 'add-samples').name('Import samples'));
-    graphicscontrollers.push(gui.add(global_triggers, 'trigger-selected').name('Flood Trigger'));
-    graphicscontrollers.push(gui.add(global_triggers, 'kill-traversal').name('Kill Traversal'));
-
-    let graphSpecs = gui.addFolder('Graphics Specs');
-    let generalSpecs = graphSpecs.addFolder('General Specs');
-    graphicscontrollers.push(generalSpecs.addColor(GraphicsSettings, 'background'));
-    graphicscontrollers.push(generalSpecs.add(GraphicsSettings, 'width', 1, 20));
-    graphicscontrollers.push(generalSpecs.add(GraphicsSettings, 'height', 1, 20));
-    graphicscontrollers.push(generalSpecs.add(GraphicsSettings, 'menuWidth', 50, 300));
-
-    let nodeSpecs = graphSpecs.addFolder('Node Specs');
-    graphicscontrollers.push(nodeSpecs.add(NodeSettings, 'radius', 1, 100));
-    graphicscontrollers.push(nodeSpecs.addColor(NodeSettings, 'idleColor'));
-    graphicscontrollers.push(nodeSpecs.addColor(NodeSettings, 'selectionColor'));
-    graphicscontrollers.push(nodeSpecs.add(NodeSettings, 'selectionWidth', 1, 20));
-    graphicscontrollers.push(nodeSpecs.addColor(NodeSettings, 'activeColor'));
-
-    let idSpecs = graphSpecs.addFolder('ID text Specs');
-    graphicscontrollers.push(idSpecs.add(NodeSettings, 'idFont'));
-    graphicscontrollers.push(idSpecs.add(NodeSettings, 'idFontSize', 5, 80));
-    graphicscontrollers.push(idSpecs.addColor(NodeSettings, 'idColor'));
-
-    let edgeSpecs = graphSpecs.addFolder('Edge Specs');
-    graphicscontrollers.push(edgeSpecs.add(EdgeSettings, 'width', 1, 10));
-    graphicscontrollers.push(edgeSpecs.addColor(EdgeSettings, 'color'));
-    graphicscontrollers.push(edgeSpecs.add(EdgeSettings, 'arrowLen', 5, 40));
-    graphicscontrollers.push(edgeSpecs.addColor(EdgeSettings, 'selectionColor'));
-
-
-    // Handle updates
-    for (let ctrlr of graphicscontrollers) {
-        ctrlr.onChange(() => graph.update());
-    }
-
-    gui.remember(GraphicsSettings);
-    gui.remember(NodeSettings);
-    gui.remember(EdgeSettings);
-
-    
-    return {
-        'graph' : graph,
-        'gui' : gui
-    }
-
-    
+    return graph;
 })();

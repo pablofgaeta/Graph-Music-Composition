@@ -62,10 +62,7 @@ let AudioController = (function() {
         constructor(opts) {
             this.polyphony = 10;
             this.release = '8n';
-            Object.keys(opts).forEach(key => {
-                if (this.hasOwnProperty(key))
-                    this[key] = opts[key];
-            });
+            Object.keys(opts).forEach(key => { this[key] = opts[key]; });
             this.scale = new Scale(opts);
 
             this.tone = new Tone.PolySynth(this.polyphony, Tone.AMSynth, {
@@ -123,10 +120,58 @@ let AudioController = (function() {
     }
 })();
 
-class AudioPlayer { 
-    constructor() {
+// class ETSynth {
+//     static keys = ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'];
+//     static default = {
+//         base : 440,
+//         polyphony : 10,
+//         release : '8n'
+//     }
 
-    }
+//     constructor(divisions = 12, opts = {}) {
+//         this.settings = {...ETSynth.default};
+//         Object.keys(opts).forEach(key => { this.settings[key] = opts[key]; });
+
+//         this.set_divisions(divisions);
+//         this.tone = new Tone.PolySynth(this.settings.polyphony, Tone.FMSynth, {
+//             modulation: {
+//                 type: 'sine'
+//             }
+//         }).toMaster();
+//     }
+
+//     set_divisions(val) {
+//         if (typeof val != 'number' || val == 0) {
+//             console.log("Invalid division assignment");
+//             return;
+//         }
+
+//         this.notes = [];
+//         let ratio = Math.pow(2, 1 / val);
+//         for (var i = 0; i < Math.floor(val); ++i) {
+//             this.notes.push(this.settings.base * Math.pow(ratio, i + 1));
+//         }
+//     }
+
+//     play(key) {
+//         let index = ETSynth.keys.indexOf(key);
+//         if (index != -1 && index < this.notes.length) {
+//             this.tone.triggerAttackRelease(
+//                 this.notes[index] + 'hz', this.settings.release
+//             );
+//         }
+//     }
+// }
+
+// document.onkeypress = (event) => {
+//     let key_index = CustomInstrument.keys.indexOf(event.key);
+//     if (key_index != -1) {
+
+//     }
+// }
+
+class AudioPlayer { 
+    constructor() { }
 
     spawn_menu(gui, name) {
         throw "spawn_menu must be implemented in derived class";
@@ -143,26 +188,35 @@ let AudioFileManager = (() => {
     let sample_input = document.createElement("input");
     sample_input.type = 'file';
     sample_input.accept = 'audio/*';
+    sample_input.multiple = true;
     sample_input.addEventListener("change", function() {
         const files = Object.values(this.files);
         let file;
         for (let i = 0; i < files.length; ++i) {
             file = files[i];
             if ( !Object.keys(__urls).includes(file.name)) {
-                __urls[file.name] = URL.createObjectURL(file);
+                const new_file_url = URL.createObjectURL(file);
+                __urls[file.name] = new Tone.Player(new_file_url).toMaster();
             }
         }
     }, false);
 
-    let add = () => {
-        sample_input.click();
-    }
+    let importAudio = () => sample_input.click();
 
     return {
         url_map : __urls,
         get files() { return Object.keys(__urls)   },
         get urls()  { return Object.values(__urls) },
-        'add'   : add
+        add : (filename, url) => { __urls[filename] = url; },
+        play : (filename) => {
+            if(__urls.hasOwnProperty(filename)) {
+                const single_player = new Tone.Player({
+                    url : __urls[filename],
+                    autostart : true
+                }).toMaster();
+            }
+        },
+        'importAudio' : importAudio
     }
 })();
 
@@ -170,15 +224,15 @@ let AudioFileManager = (() => {
  *
  * @param {Number} base_frequency - frequency in hz
  */
-class SynthPlayer extends AudioPlayer {
+class GCMSynth extends AudioPlayer {
     static default_opts = {
         'base' : 440
     };
 
-    constructor(opts = SynthPlayer.default_opts) {
+    constructor(opts = GCMSynth.default_opts) {
         super();
         // Add any new options
-        this.current_ops = {...SynthPlayer.default_opts};
+        this.current_ops = {...GCMSynth.default_opts};
         Object.keys(opts).forEach(key => { this.current_ops[key] = opts[key]; });
 
         this.instrument = new AudioController.Synth(opts);
@@ -227,44 +281,27 @@ class SynthPlayer extends AudioPlayer {
     update_base(frequency) {
         this.instrument.scale.update_base(frequency);
     }
-
-    spawn_menu(gui, name) {
-        // Begin folder
-        let folder = gui.addFolder(name);
-
-        // Base frequency
-        folder.add(this.instrument.scale, 'base', 1, 1000)
-            .name('base frequency')
-            .onChange(frequency => this.instrument.scale.update_base(frequency) );
-
-        // Allow inclusion of each relative frequencies from the instrument's scale
-        for (let note_idx = 0; note_idx < this.note_states.length; ++note_idx) {
-            folder.add(this.note_states, note_idx)
-                .name('relative ' + note_idx)
-                .onChange( (state) => { this.update_note_inclusion(note_idx, state); }
-            );
-        }
-        return folder;
-    }
 }
 
 
-class SamplePlayer extends AudioPlayer {
-    constructor() {
+class GCMSampler extends AudioPlayer {
+    constructor(sample) {
         super();
-        this.set_sample();
+        this.set_sample(sample);
     }
 
     /** 
      * @param {Number} sample_index : Index of loaded samples to use for sampler
     */
-    set_sample(sample_index = 0) {
-        if (sample_index < AudioFileManager.urls.length) {
-            this.sample_url = AudioFileManager.urls[sample_index];
-            this.sampler = new Tone.Player(this.sample_url).toMaster();
+    set_sample(sample) {
+        console.log(sample);
+        if (AudioFileManager.url_map.hasOwnProperty(sample)) {
+            const sample_url = AudioFileManager.url_map[sample];
+            console.log(sample_url);
+            this.sampler = new Tone.Player(sample_url).toMaster();
         }
         else {
-            console.log('Sample index is out of bounds. Sample not loaded');
+            console.log('No samples are loaded, cannot set');
         }
     }
 
@@ -279,14 +316,5 @@ class SamplePlayer extends AudioPlayer {
         else {
             console.log("Sample hasn't been loaded");
         }
-    }
-
-    spawn_menu(gui, name) {
-        // Begin folder
-        let folder = gui.addFolder(name);
-        folder.add(this, 'sample_url', AudioFileManager.files)
-            .name('Sample')
-            .onChange(sample => { this.set_sample(AudioFileManager.files.indexOf(sample)) });
-        return folder;
     }
 }

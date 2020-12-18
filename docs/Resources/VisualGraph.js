@@ -281,20 +281,21 @@ class Coordinate {
  */
 class VisualNode extends GraphNode {
     static settings = {
-        "radius" : 39,
-        "idleColor" : "#f0fd96",
-        "activeColor" : "#ff71f1",
-        "selectionColor" : "#6969fa",
-        "selectionWidth" : 15,
+        "radius" : 50,
+        "idleColor" : "#9a9a9a",
+        "activeColor" : "#aeff72",
+        "selectionColor" : '#000000',
+        "selectionWidth" : 7,
 
-        "idColor" : "#000000",
-        "idFontSize" : 60,
+        "idColor" : "#ffffff",
+        "idFontSize" : 24,
         "idFont" : "Arial"
     }
 
-    constructor(position, id = null) {
+    constructor(position, id = null, displayText=id) {
         super(id);
         if (!(position instanceof Coordinate)) throw "position must be a Coordinate instance";
+        this.displayText = displayText;
         this.position = position;
         this.active = true;
         this.animating = false;
@@ -337,7 +338,7 @@ class VisualNode extends GraphNode {
         context.font = VisualNode.settings.idFontSize + 'px ' + VisualNode.settings.idFont;
         context.fillStyle = VisualNode.settings.idColor;
         context.textAlign = "center";
-        context.fillText(this.id, x, y + VisualNode.settings.idFontSize / 3);
+        context.fillText(this.displayText, x, y + VisualNode.settings.idFontSize / 3);
     }
 
     /**
@@ -356,10 +357,10 @@ class VisualNode extends GraphNode {
 
 class VisualEdge extends GraphEdge {
     static settings = {
-        "width" : 8.5,
-        "color" : "#000000",
-        "arrowLen" : 20,
-        "selectionColor" : "#ffffff"
+        "width" : 10,
+        "color" : "#f29f9f",
+        "arrowLen" : 25,
+        "selectionColor" : "#000000"
     }
 
     static line(a, b, context, scale = 1, color = VisualEdge.settings.color) {
@@ -372,12 +373,11 @@ class VisualEdge extends GraphEdge {
     * @param {VisualNode} child : child node of the edge
     * @param {CanvasRenderingContext2D} drawing_context : Context in which to draw on { Default : null }
     */
-    constructor(parent, child, drawing_context = null, delay = GraphObj.default_delay) {
+    constructor(parent, child, delay = GraphObj.default_delay) {
         if (! (parent instanceof VisualNode && child instanceof VisualNode)) {
             throw "Only accepts VisualNode (or derived classes)";
         }
         super(parent, child);
-        this.context = drawing_context;
         this.delay = delay;
     }
 
@@ -465,7 +465,7 @@ class VisualEdge extends GraphEdge {
 
 class VisualGraph extends Graph {
     static settings = {
-        "background" : "#848484",
+        "background" : "#ffffff",
         "width" : 5,
         "height" : 5,
         "menuWidth" : 120
@@ -605,7 +605,7 @@ class VisualGraph extends Graph {
         this.canvas.height = (window.innerHeight * VisualGraph.settings.height).toString();
 
         // Clear canvas first
-        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        // this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         // draw all edges
         Object.values(this.edges).forEach(edge => {
