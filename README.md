@@ -10,9 +10,9 @@ All graphics are drawn in Vanilla JS using basic rendering on a Canvas Element
 * Move (single or multi-select) : <kbd>click</kbd> (over a node) + drag mouse
 * Toggle node/edge selection    : <kbd>option</kbd> + click (over a node)
 * Multi-select                  : <kbd>click</kbd> (NOT over a node) + drag over desired nodes/edges
-  - Delete selected             : <kbd>delete</kbd> / <kbd>backspace</kbd> 
 ### Edit modes (temporary behavior)
 * While nodes are selected, press any number <kbd>1</kbd>-<kbd>9</kbd> to choose the first 9 samples 
+* Delete selected nodes/edges with <kbd>delete</kbd> / <kbd>backspace</kbd> 
 ### Play modes 
 * Trigger selected nodes : <kbd>x</kbd>
   - Triggering a node causes automatic traversal of the directed graph starting at each currently selected node
