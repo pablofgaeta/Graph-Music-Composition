@@ -144,7 +144,13 @@ const GCMInterface = (function() {
                 AudioFileManager.add(sample, sample_file.url);
                 const new_sample_bar = document.createElement('div');
                 new_sample_bar.addEventListener('click', () => {
-                    AudioFileManager.play(sample);
+                    for (const node of graph.selected_nodes) {
+                        if (node.type === 'sample') {
+                            node.player.set_sample(sample);
+                            node.displayText = sample;
+                        }
+                    }
+                    graph.draw();
                 })
                 new_sample_bar.className = 'txt-s section-sub-choice';
                 new_sample_bar.innerHTML = `- ${sample}`;
@@ -176,7 +182,7 @@ const GCMInterface = (function() {
             graph.toggle_samples(Number(event.key));
         }
         if (event.key == 'e') {
-            // graph.toggle_menus(gui);
+
         }
         if (event.key == 'k') {
             graph.toggle_active(false);
