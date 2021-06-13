@@ -159,7 +159,8 @@ const GCMInterface = (function() {
         }
     })();
 
-    for(const section of ['edit-mode', 'samples']) {
+    // for(const section of ['edit-mode', 'samples']) {
+    for(const section of ['samples']) {
         const SectionChoices = Array.from(document.querySelectorAll(`#${section}-choices-container > *`));
         SectionChoices.forEach((choice) => {
             console.log(choice);
@@ -167,6 +168,8 @@ const GCMInterface = (function() {
                 console.log(`Choosing edit mode : ${choice.innerHTML}`);
                 SectionChoices.forEach(reset_choice => {reset_choice.style.color = Styles.gray});
                 choice.style.color = Styles.black;
+
+                // Make ratio selector for timing intervals along edges
             });
         })
 

@@ -1,6 +1,6 @@
 /**** BASE GRAPH IMPLEMENTATION ****/
 class GraphObj { 
-    static default_delay = 500;
+    static traverse_delay = 500;
     constructor() {
         this.selected = false;
     }
@@ -302,7 +302,7 @@ class VisualNode extends GraphNode {
     }
 
     get duration() {
-        return GraphObj.default_delay;
+        return GraphObj.traverse_delay;
     }
     
     /**
@@ -373,16 +373,17 @@ class VisualEdge extends GraphEdge {
     * @param {VisualNode} child : child node of the edge
     * @param {CanvasRenderingContext2D} drawing_context : Context in which to draw on { Default : null }
     */
-    constructor(parent, child, delay = GraphObj.default_delay) {
+    constructor(parent, child, delay_scale = 1) {
         if (! (parent instanceof VisualNode && child instanceof VisualNode)) {
             throw "Only accepts VisualNode (or derived classes)";
         }
         super(parent, child);
-        this.delay = delay;
+        this.set_delay(delay_scale);
     }
 
-    set_delay(ms) {
-        this.delay = ms;
+    set_delay(scale) {
+        this.delay = GraphObj.traverse_delay * scale;
+        return this;
     }
 
     edge_boundaries() {
