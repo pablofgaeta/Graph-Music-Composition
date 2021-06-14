@@ -65,13 +65,50 @@ class GCMGraph extends VisualGraph {
         super(canvas);
         this.open_menus = {};
     }
+    
+    obj_to_html(obj, type) { return type === 'nodes' ? `${obj.id} - ${obj.displayText}` : `${obj.hash()} - ${obj.delay}` }
+
+    update_edit() {
+        for(const graph_obj_type of ['edges', 'nodes']) {
+            const container = document.querySelector(`#edit-${graph_obj_type}-choices-container`);
+            const graph_objs = graph_obj_type === 'nodes' ? this.nodes : Object.keys(this.edges);
+    
+            while(container.lastChild) { container.lastChild.remove(); }
+    
+            graph_objs.forEach(obj => {
+                const graph_obj = graph_obj_type === 'nodes' ? obj : this.edges[obj];
+                if (graph_obj.selected) {
+                    const new_sample_bar = document.createElement('div');
+                    new_sample_bar.className = 'txt-s section-sub-choice';
+                    new_sample_bar.innerHTML = this.obj_to_html(graph_obj, graph_obj_type);
+                    container.appendChild(new_sample_bar);
+                }
+            });
+        }
+    }
+
+    select(obj) {
+        obj.select();
+        this.update_edit();
+    }
+
+    toggle_select(obj) {
+        obj.toggle_select();
+        this.update_edit();
+    }
+
+    select_in_rect(p1, p2) {
+        super.select_in_rect(p1, p2);
+        this.update_edit();
+    }
 
     /**
      * Pushes a node to the GCMGraph
      * @param {GCMNode} parent
      */
     create_node(position, type) {
-        super.push_node(new GCMNode(position, type), GCMNode);
+        const new_node = new GCMNode(position, type);
+        super.push_node(new_node, GCMNode);
     }
 
     /**
@@ -82,12 +119,28 @@ class GCMGraph extends VisualGraph {
         super.push_edge(new GCMEdge(parent, child), GCMEdge);
     }
 
-    toggle_samples(toSampleNum) {
+    set_samples(toSample) {
         this.selected_nodes.forEach(node => {
             if (node.type == 'sample') {
-                const sampleIndex = Math.min(AudioFileManager.files.length, toSampleNum)
-                if (sampleIndex > 0) {
-                    node.displayText = AudioFileManager.files[sampleIndex - 1];
+                try {
+                    node.displayText = toSample;
+                    node.player.set_sample(toSample);
+                }
+                catch(err) {
+                    console.log(`Could not set samples to : ${toSample}`);
+                    console.log(err);
+                }
+            }
+        });
+        this.draw();
+    }
+
+    set_samples_by_num(toSampleNum) {
+        this.selected_nodes.forEach(node => {
+            if (node.type == 'sample') {
+                const sampleNum = Math.min(AudioFileManager.files.length, toSampleNum)
+                if (sampleNum > 0) {
+                    node.displayText = AudioFileManager.files[sampleNum - 1];
                     node.player.set_sample(node.displayText);
                 }
                 else {

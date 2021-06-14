@@ -42,7 +42,8 @@ body::-webkit-scrollbar { /* WebKit */
 .module-2 { grid-area: module-2;}
 .module-3 { grid-area: module-3;} */
 
-#samples-choices-container, #edit-mode-choices-container {
+[id$="choices-container"]
+ {
     display:none;
     flex-direction: column;
     flex-wrap: wrap;

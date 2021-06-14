@@ -7,7 +7,7 @@ class GraphObj {
     select() { 
         this.selected = true;
     }
-    toggle_selected() {
+    toggle_select() {
         this.selected = !this.selected;
     };
 }
@@ -281,14 +281,13 @@ class Coordinate {
  */
 class VisualNode extends GraphNode {
     static settings = {
-        "radius" : 50,
-        "idleColor" : "#9a9a9a",
+        "radius" : 40,
+        idleColor : "#89cff0",
         "activeColor" : "#aeff72",
         "selectionColor" : '#000000',
         "selectionWidth" : 7,
-
-        "idColor" : "#ffffff",
-        "idFontSize" : 24,
+        "idColor" : "#000000",
+        "idFontSize" : 20,
         "idFont" : "Arial"
     }
 
@@ -359,7 +358,7 @@ class VisualEdge extends GraphEdge {
     static settings = {
         "width" : 10,
         "color" : "#f29f9f",
-        "arrowLen" : 25,
+        "arrowLen" : 20,
         "selectionColor" : "#000000"
     }
 

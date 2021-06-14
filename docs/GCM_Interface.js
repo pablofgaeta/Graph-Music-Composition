@@ -65,8 +65,8 @@ const GCMInterface = (function() {
                     console.log("Clear selections and make instantaneous selection");
                     // Clear any current selections and make new selection
                     graph.clear_selections();
-                    if (hovered_node) hovered_node.select();
-                    if (hovered_edge) hovered_edge.select();
+                    if (hovered_node) graph.select(hovered_node, 'nodes');
+                    if (hovered_edge) graph.select(hovered_edge, 'edges');
                 }
             }
             // RESET SELECTION STATE
@@ -78,8 +78,8 @@ const GCMInterface = (function() {
         // ALLOW MANUAL TOGGLING OF NODES
         else if (extend_selection_mode(event)) {
             console.log("manual node selection extension");
-            if (hovered_node) hovered_node.toggle_selected();
-            if (hovered_edge) hovered_edge.toggle_selected();
+            if (hovered_node) graph.toggle_select(hovered_node, 'nodes');
+            if (hovered_edge) graph.toggle_select(hovered_edge, 'edges');
         }
         // REGISTER SELECTED STARTING NODE
         else if (edge_mode(event) && hovered_node) {
@@ -137,54 +137,45 @@ const GCMInterface = (function() {
 
 
     const SampleChoicesContainer = document.querySelector('#samples-choices-container');
-    (async function() {
+    (async function sidebar_setup() {
         for (const sample of ['kick', 'snare', 'hihat', 'tom', 'cowbell']) {
             try {
                 const sample_file = await fetch(`./Resources/drums/${sample}.wav`);
                 AudioFileManager.add(sample, sample_file.url);
                 const new_sample_bar = document.createElement('div');
                 new_sample_bar.addEventListener('click', () => {
-                    for (const node of graph.selected_nodes) {
-                        if (node.type === 'sample') {
-                            node.player.set_sample(sample);
-                            node.displayText = sample;
-                        }
-                    }
-                    graph.draw();
+                    graph.set_samples(sample);
                 })
                 new_sample_bar.className = 'txt-s section-sub-choice';
                 new_sample_bar.innerHTML = `- ${sample}`;
                 SampleChoicesContainer.appendChild(new_sample_bar);
             } catch (e) {console.error(e)}
         }
-    })();
 
-    // for(const section of ['edit-mode', 'samples']) {
-    for(const section of ['samples']) {
-        const SectionChoices = Array.from(document.querySelectorAll(`#${section}-choices-container > *`));
-        SectionChoices.forEach((choice) => {
-            console.log(choice);
-            choice.addEventListener('click', () => {
-                console.log(`Choosing edit mode : ${choice.innerHTML}`);
-                SectionChoices.forEach(reset_choice => {reset_choice.style.color = Styles.gray});
-                choice.style.color = Styles.black;
-
-                // Make ratio selector for timing intervals along edges
+        for(const section of ['samples', 'edit-nodes', 'edit-edges']) {
+            // const SectionChoices = Array.from(document.querySelectorAll(`#${section}-choices-container > *`));
+            // SectionChoices.forEach((choice) => {
+            //     choice.addEventListener('click', () => {
+            //         console.log(`Clicked : ${choice.innerHTML}`);
+            //         SectionChoices.forEach(reset_choice => {reset_choice.style.color = Styles.gray});
+            //         choice.style.color = Styles.black;
+            //     });
+            // })
+    
+            document.querySelector(`#${section}-selector`).addEventListener('click', () => {
+                const EMChoicesContainer = document.querySelector(`#${section}-choices-container`);
+                EMChoicesContainer.style.display = EMChoicesContainer.style.display === 'flex' ? 'none' : 'flex';
             });
-        })
-
-        document.querySelector(`#${section}-selector`).addEventListener('click', () => {
-            const EMChoicesContainer = document.querySelector(`#${section}-choices-container`);
-            EMChoicesContainer.style.display = EMChoicesContainer.style.display === 'flex' ? 'none' : 'flex';
-        });
-    }
+        }
+    })();
 
     document.addEventListener('keydown', (event) => {
         if (!isNaN(event.key)) {
             console.log(graph.selected_nodes);
-            graph.toggle_samples(Number(event.key));
+            graph.set_samples_by_num(Number(event.key));
         }
         if (event.key == 'e') {
+                // Make ratio selector for timing intervals along edges
 
         }
         if (event.key == 'k') {
