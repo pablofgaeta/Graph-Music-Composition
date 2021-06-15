@@ -42,16 +42,6 @@ body::-webkit-scrollbar { /* WebKit */
 .module-2 { grid-area: module-2;}
 .module-3 { grid-area: module-3;} */
 
-[id$="choices-container"]
- {
-    display:none;
-    flex-direction: column;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    align-items: flex-start;
-    transition: height 2s;
-}
-
 /* #samples-choices-container > * {
     position : absolute;
 } */
@@ -186,7 +176,6 @@ body::-webkit-scrollbar { /* WebKit */
 
 .sidenav div {
     text-decoration: none;
-    display: block;
 }
 
 .section-selector { color : #2196F3; }
@@ -304,3 +293,13 @@ body::-webkit-scrollbar { /* WebKit */
 @-webkit-keyframes fadeIn { 0% { opacity:0; } 100% { opacity:1; } }
 @-o-keyframes      fadeIn { 0% { opacity:0; } 100% { opacity:1; } }
 @-ms-keyframes     fadeIn { 0% { opacity:0; } 100% { opacity:1; } }
+
+[id$="choices-container"]
+ {
+    display:none;
+    flex-direction: column;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: flex-start;
+    transition: height 2s;
+}
