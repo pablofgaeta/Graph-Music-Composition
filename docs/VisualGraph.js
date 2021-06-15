@@ -291,13 +291,17 @@ class VisualNode extends GraphNode {
         "idFont" : "Arial"
     }
 
-    constructor(position, id = null, displayText=id) {
+    constructor(position, id = null, name = id) {
         super(id);
         if (!(position instanceof Coordinate)) throw "position must be a Coordinate instance";
-        this.displayText = displayText;
+        this.name = name;
         this.position = position;
         this.active = true;
         this.animating = false;
+    }
+
+    toString() {
+        return `#${this.id} : ${this.name}`;
     }
 
     get duration() {
@@ -337,7 +341,8 @@ class VisualNode extends GraphNode {
         context.font = VisualNode.settings.idFontSize + 'px ' + VisualNode.settings.idFont;
         context.fillStyle = VisualNode.settings.idColor;
         context.textAlign = "center";
-        context.fillText(this.displayText, x, y + VisualNode.settings.idFontSize / 3);
+        context.fillText(this.id, x, y - 2 * VisualNode.settings.idFontSize / 3);
+        context.fillText(this.name, x, y + 2 * VisualNode.settings.idFontSize / 3);
     }
 
     /**
@@ -381,6 +386,7 @@ class VisualEdge extends GraphEdge {
     }
 
     set_delay(scale) {
+        this.delay_scale = scale;
         this.delay = GraphObj.traverse_delay * scale;
         return this;
     }

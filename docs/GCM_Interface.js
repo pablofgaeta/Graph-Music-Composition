@@ -65,8 +65,8 @@ const GCMInterface = (function() {
                     console.log("Clear selections and make instantaneous selection");
                     // Clear any current selections and make new selection
                     graph.clear_selections();
-                    if (hovered_node) graph.select(hovered_node, 'nodes');
-                    if (hovered_edge) graph.select(hovered_edge, 'edges');
+                    if (hovered_node) graph.select(hovered_node);
+                    if (hovered_edge) graph.select(hovered_edge);
                 }
             }
             // RESET SELECTION STATE
@@ -78,8 +78,8 @@ const GCMInterface = (function() {
         // ALLOW MANUAL TOGGLING OF NODES
         else if (extend_selection_mode(event)) {
             console.log("manual node selection extension");
-            if (hovered_node) graph.toggle_select(hovered_node, 'nodes');
-            if (hovered_edge) graph.toggle_select(hovered_edge, 'edges');
+            if (hovered_node) graph.toggle_select(hovered_node);
+            if (hovered_edge) graph.toggle_select(hovered_edge);
         }
         // REGISTER SELECTED STARTING NODE
         else if (edge_mode(event) && hovered_node) {
@@ -170,12 +170,11 @@ const GCMInterface = (function() {
     })();
 
     document.addEventListener('keydown', (event) => {
-        if (!isNaN(event.key)) {
-            console.log(graph.selected_nodes);
-            graph.set_samples_by_num(Number(event.key));
+        if (!isNaN(event.key) && Number(event.key) < AudioFileManager.files.length) {
+            graph.set_samples(AudioFileManager.files[Number(event.key)]);
         }
         if (event.key == 'e') {
-                // Make ratio selector for timing intervals along edges
+            // Make ratio selector for timing intervals along edges
 
         }
         if (event.key == 'k') {

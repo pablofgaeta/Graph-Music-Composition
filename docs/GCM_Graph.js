@@ -6,10 +6,18 @@
  * @param {Number} id (optional) - Identifier used to uniquely identify a node
  */
 class GCMNode extends VisualNode {
-    constructor(position, type = 'sample', id = null, displayText='kick') {
-        super(position, id, displayText);
+    constructor(position, type = 'sample', id = null, name='kick') {
+        super(position, id, name);
         this.set_player_type(type);
         this.active = true;
+    }
+
+
+    add2container(container) {
+        const node_div = document.createElement('div');
+        node_div.className = 'txt-s section-sub-choice';
+        node_div.innerHTML = this.toString();
+        container.appendChild(node_div);
     }
 
     set_player_type(type) {
@@ -20,15 +28,11 @@ class GCMNode extends VisualNode {
                 this.player = new GCMSynth();
                 break
             case 'sample' :
-                this.player = new GCMSampler(this.displayText);
+                this.player = new GCMSampler(this.name);
                 break;
             default :
                 throw type + " is not a supported type.";
         }
-    }
-
-    get name() {
-        return "Node " + this.id;
     }
 
     get duration() {
@@ -52,6 +56,33 @@ class GCMEdge extends VisualEdge {
         }
         super(parent, child, drawing_context);
     }
+
+    add2container(container) {
+        const edge_container = document.createElement('div');
+        edge_container.className = 'txt-s section-sub-choice';
+        const edge_hash = document.createElement('div');
+        edge_hash.innerHTML = `${this.hash()} - ${this.delay_scale}`;
+        const edge_value = document.createElement('input');
+        edge_value.type = 'range';
+        edge_value.min = 0;
+        edge_value.max = 50;
+        edge_value.addEventListener('input', _ => {
+            // (0, 40)
+            const delay_scale = (Math.exp((edge_value.value - Math.E) / Math.pow(Math.E,2) - Math.E)).toFixed(4);
+            this.set_delay(delay_scale);
+            console.log("setting delay", this.delay_scale);
+            edge_hash.innerHTML = `${this.hash()} - ${delay_scale}`;
+        });
+
+        edge_container.appendChild(edge_hash);
+        edge_container.appendChild(edge_value);
+
+        container.appendChild(edge_container);
+        // const edge_div = document.createElement('div');
+        // edge_div.className = 'txt-s section-sub-choice';
+        // edge_div.innerHTML = `${this.hash()} - ${this.delay}`;
+        // container.appendChild(edge_div);
+    }
 }
 
 
@@ -66,24 +97,18 @@ class GCMGraph extends VisualGraph {
         this.open_menus = {};
     }
     
-    obj_to_html(obj, type) { return type === 'nodes' ? `${obj.id} - ${obj.displayText}` : `${obj.hash()} - ${obj.delay}` }
-
     update_edit() {
-        for(const graph_obj_type of ['edges', 'nodes']) {
-            const container = document.querySelector(`#edit-${graph_obj_type}-choices-container`);
-            const graph_objs = graph_obj_type === 'nodes' ? this.nodes : Object.keys(this.edges);
-    
-            while(container.lastChild) { container.lastChild.remove(); }
-    
-            graph_objs.forEach(obj => {
-                const graph_obj = graph_obj_type === 'nodes' ? obj : this.edges[obj];
-                if (graph_obj.selected) {
-                    const new_sample_bar = document.createElement('div');
-                    new_sample_bar.className = 'txt-s section-sub-choice';
-                    new_sample_bar.innerHTML = this.obj_to_html(graph_obj, graph_obj_type);
-                    container.appendChild(new_sample_bar);
-                }
-            });
+        const edit_edge_container = document.querySelector(`#edit-edges-choices-container`);
+        const edit_node_container = document.querySelector(`#edit-nodes-choices-container`);
+
+        while(edit_edge_container.lastChild)  { edit_edge_container.lastChild.remove();  }
+        for (let edge of this.selected_edges) {
+            edge.add2container(edit_edge_container);
+        }
+
+        while(edit_node_container.lastChild)  { edit_node_container.lastChild.remove();  }
+        for (let node of this.selected_nodes) {
+            node.add2container(edit_node_container);
         }
     }
 
@@ -123,32 +148,15 @@ class GCMGraph extends VisualGraph {
         this.selected_nodes.forEach(node => {
             if (node.type == 'sample') {
                 try {
-                    node.displayText = toSample;
-                    node.player.set_sample(toSample);
+                    node.name = toSample;
+                    node.player.set_sample(node.name);
                 }
                 catch(err) {
-                    console.log(`Could not set samples to : ${toSample}`);
                     console.log(err);
+                    console.log(`Could not set samples to : ${toSample}`);
                 }
             }
         });
         this.draw();
-    }
-
-    set_samples_by_num(toSampleNum) {
-        this.selected_nodes.forEach(node => {
-            if (node.type == 'sample') {
-                const sampleNum = Math.min(AudioFileManager.files.length, toSampleNum)
-                if (sampleNum > 0) {
-                    node.displayText = AudioFileManager.files[sampleNum - 1];
-                    node.player.set_sample(node.displayText);
-                }
-                else {
-                    console.log(`Sample index (${toSampleNum})`);
-                    console.log(`Must be in range 0 < x < ${AudioFileManager.files.length}`);
-                }
-            }
-        });
-        super.draw();
     }
 }
