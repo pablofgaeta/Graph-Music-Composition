@@ -61,7 +61,7 @@ class GCMEdge extends VisualEdge {
         const edge_container = document.createElement('div');
         edge_container.className = 'txt-s section-sub-choice';
         const edge_hash = document.createElement('div');
-        edge_hash.innerHTML = `${this.hash()} - ${this.delay_scale}`;
+        edge_hash.innerHTML = `${this.hash()} : ${this.delay_scale.toFixed(3)}`;
         const edge_value = document.createElement('input');
         edge_value.type = 'text';
         edge_value.addEventListener('input', _ => {
@@ -71,6 +71,7 @@ class GCMEdge extends VisualEdge {
                 // console.log(expr[0],'=',eval(expr[0]));
                 const scale = eval(expr[0]);
                 this.set_delay(scale);
+                edge_hash.innerHTML = `${this.hash()} : ${this.delay_scale.toFixed(3)}`;
             }
         });
         edge_container.appendChild(edge_hash);

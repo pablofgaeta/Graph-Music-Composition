@@ -9,7 +9,7 @@ const Styles = {
 };
 
 // Singleton to control the state of the Application
-const GCMInterface = (function() {
+const GCM = (function() {
     let graph = new GCMGraph();
 
     /********* STATE CONTROLLER *************/
@@ -135,47 +135,9 @@ const GCMInterface = (function() {
         graph.draw();
     };
 
-
-    const SampleChoicesContainer = document.querySelector('#samples-choices-container');
-    (async function sidebar_setup() {
-        for (const sample of ['kick', 'snare', 'hihat', 'tom', 'cowbell']) {
-            try {
-                const sample_file = await fetch(`./Resources/drums/${sample}.wav`);
-                AudioFileManager.add(sample, sample_file.url);
-                const new_sample_bar = document.createElement('div');
-                new_sample_bar.addEventListener('click', () => {
-                    graph.set_samples(sample);
-                })
-                new_sample_bar.className = 'txt-s section-sub-choice';
-                new_sample_bar.innerHTML = `- ${sample}`;
-                SampleChoicesContainer.appendChild(new_sample_bar);
-            } catch (e) {console.error(e)}
-        }
-
-        for(const section of ['samples', 'edit-nodes', 'edit-edges']) {
-            // const SectionChoices = Array.from(document.querySelectorAll(`#${section}-choices-container > *`));
-            // SectionChoices.forEach((choice) => {
-            //     choice.addEventListener('click', () => {
-            //         console.log(`Clicked : ${choice.innerHTML}`);
-            //         SectionChoices.forEach(reset_choice => {reset_choice.style.color = Styles.gray});
-            //         choice.style.color = Styles.black;
-            //     });
-            // })
-    
-            document.querySelector(`#${section}-selector`).addEventListener('click', () => {
-                const EMChoicesContainer = document.querySelector(`#${section}-choices-container`);
-                EMChoicesContainer.style.display = EMChoicesContainer.style.display === 'flex' ? 'none' : 'flex';
-            });
-        }
-    })();
-
-    document.addEventListener('keydown', (event) => {
+    graph.canvas.addEventListener('keydown', (event) => {
         if (!isNaN(event.key) && Number(event.key) < AudioFileManager.files.length) {
             graph.set_samples(AudioFileManager.files[Number(event.key)]);
-        }
-        if (event.key == 'e') {
-            // Make ratio selector for timing intervals along edges
-
         }
         if (event.key == 'k') {
             graph.toggle_active(false);
@@ -187,6 +149,28 @@ const GCMInterface = (function() {
             graph.delete_selected();
         }
     });
-
     return graph;
+})();
+
+const SampleChoicesContainer = document.querySelector('#samples-choices-container');
+(async function sidebar_setup() {
+    for (const sample of ['kick', 'snare', 'hihat', 'tom', 'cowbell']) {
+        try {
+            const sample_file = await fetch(`./Resources/drums/${sample}.wav`);
+            AudioFileManager.add(sample, sample_file.url);
+            const new_sample_bar = document.createElement('div');
+            new_sample_bar.addEventListener('click', () => {
+                GCM.set_samples(sample);
+            })
+            new_sample_bar.className = 'txt-s section-sub-choice';
+            new_sample_bar.innerHTML = `- ${sample}`;
+            SampleChoicesContainer.appendChild(new_sample_bar);
+        } catch (e) {console.error(e)}
+    }
+    for(const section of ['samples', 'edit-nodes', 'edit-edges']) {
+        document.querySelector(`#${section}-selector`).addEventListener('click', () => {
+            const EMChoicesContainer = document.querySelector(`#${section}-choices-container`);
+            EMChoicesContainer.style.display = EMChoicesContainer.style.display === 'flex' ? 'none' : 'flex';
+        });
+    }
 })();

@@ -489,6 +489,7 @@ class VisualGraph extends Graph {
         }
         else {
             this.canvas = document.createElement('canvas');
+            this.canvas.tabIndex = 1;
             document.body. appendChild(this.canvas);
         }
         this.context = this.canvas.getContext("2d");
