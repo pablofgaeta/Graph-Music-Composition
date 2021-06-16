@@ -63,25 +63,19 @@ class GCMEdge extends VisualEdge {
         const edge_hash = document.createElement('div');
         edge_hash.innerHTML = `${this.hash()} - ${this.delay_scale}`;
         const edge_value = document.createElement('input');
-        edge_value.type = 'range';
-        edge_value.min = 0;
-        edge_value.max = 50;
+        edge_value.type = 'text';
         edge_value.addEventListener('input', _ => {
-            // (0, 40)
-            const delay_scale = (Math.exp((edge_value.value - Math.E) / Math.pow(Math.E,2) - Math.E)).toFixed(4);
-            this.set_delay(delay_scale);
-            console.log("setting delay", this.delay_scale);
-            edge_hash.innerHTML = `${this.hash()} - ${delay_scale}`;
+            // Only match pos/neg int/float/frac expression
+            const expr = edge_value.value.match(/^\s*-?\s*\d+(?:\.\d+)?(?:\s*\/\s*\d+(?:\.\d+)?)?\s*$/);
+            if (expr) {
+                // console.log(expr[0],'=',eval(expr[0]));
+                const scale = eval(expr[0]);
+                this.set_delay(scale);
+            }
         });
-
         edge_container.appendChild(edge_hash);
         edge_container.appendChild(edge_value);
-
         container.appendChild(edge_container);
-        // const edge_div = document.createElement('div');
-        // edge_div.className = 'txt-s section-sub-choice';
-        // edge_div.innerHTML = `${this.hash()} - ${this.delay}`;
-        // container.appendChild(edge_div);
     }
 }
 
