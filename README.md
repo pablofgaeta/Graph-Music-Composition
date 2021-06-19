@@ -16,6 +16,8 @@ All graphics are drawn in Vanilla JS using basic rendering on a Canvas Element
 ### Play modes 
 * Trigger selected nodes : <kbd>x</kbd>
   - Triggering a node causes automatic traversal of the directed graph starting at each currently selected node
+* Kill graph traversal : <kbd>k</kbd>
+  - Prevents further traversal for any nodes
 
 ## Files
 * VisualGraph.js   : Defines a GraphObj and its child class, VisualGraph, which implements HTMLCanvas visualization of a Graph data structure
@@ -26,8 +28,8 @@ All graphics are drawn in Vanilla JS using basic rendering on a Canvas Element
 
 ## PLANS
 * ✅ : Graph/Node classes
-* ✅ : Design Graph Visualization (mostly)
-* ✅ : Graph traversal algorithms (until more complex ones)
+* ✅ : Design Graph Visualization (baseline)
+* ✅ : Graph traversal algorithms (baseline)
 * ✅ : Timed traversal events
 * ✅ : GCMSampler and GCMSynth
 * ✅ : UI display of current loaded samples and editing mode states
@@ -35,23 +37,27 @@ All graphics are drawn in Vanilla JS using basic rendering on a Canvas Element
 * ✅ : Change GCMSampler sample by indexing (by keypress 1-9) the currently loaded files (this will likely change for a more universal strategy to incorporate >9 samples)
 * ✅ : Associate each node (single voice) with registered instrument
 * User-loaded samples
-* Design each instrument with dat.gui
+* Design synthesizers
     - [Synth vs. sample]
     - Synth FX : timbre/adsr/effects/FM or AM Algorithms
     - Sample FX : playback rate/effects
     - Dynamic FX over time or algorithmically for an instrument
-* Create edit modes to differentiate between edge and node editing
 * Node frequency control
   - relative
   - just-tuned
   - sample playback manipulation
-* Symbolic triggers for separate connected components
-    - This would help keep sections brief and discrete while still being able to communicate
-    - Trigger multiple sections instantaneously with a single click
+* Additional node types:
+  - Probabilistic trigger
+  - Symbolic trigger
+  - Time To Live state
+  - Breakpoint state
+* Graph abstractions
 
 ## Nodes
 * Associated with a specific synth or instrument
+
 or
+
 * Symbolic trigger to a different node
 ## Connected Components
 * Discrete sections of composition
