@@ -8,10 +8,13 @@ All graphics are drawn in Vanilla JS using basic rendering on a Canvas Element
 * Create edge                : <kbd>alt</kbd> (hold) + click and drag from one node to another
 ### Selection commands
 * Move (single or multi-select) : <kbd>click</kbd> (over a node) + drag mouse
-* Toggle node/edge selection    : <kbd>option</kbd> + click (over a node)
+* Toggle node/edge selection    : <kbd>shift</kbd> + click (over a node)
 * Multi-select                  : <kbd>click</kbd> (NOT over a node) + drag over desired nodes/edges
-### Edit modes (temporary behavior)
-* While nodes are selected, press any number <kbd>1</kbd>-<kbd>9</kbd> to choose the first 9 samples 
+### Edit modes
+* Change samples :
+  - While nodes are selected, press any number <kbd>1</kbd>-<kbd>9</kbd> to choose the first 9 samples 
+  - Otherwise, clicking on "samples/${file}" assigns the sample to all selected nodes
+* Change edge delay : Select edge and edit the scaling factor on the "Selected Edges" sidebar
 * Delete selected nodes/edges with <kbd>delete</kbd> / <kbd>backspace</kbd> 
 ### Play modes 
 * Trigger selected nodes : <kbd>x</kbd>
