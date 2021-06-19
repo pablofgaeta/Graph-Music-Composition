@@ -129,6 +129,7 @@ class GCMGraph extends VisualGraph {
     create_node(position, type) {
         const new_node = new GCMNode(position, type);
         super.push_node(new_node, GCMNode);
+        return new_node;
     }
 
     /**
@@ -136,7 +137,9 @@ class GCMGraph extends VisualGraph {
      * @param {GCMEdge} parent
      */
     create_edge(parent, child) {
-        super.push_edge(new GCMEdge(parent, child), GCMEdge);
+        const new_edge = new GCMEdge(parent, child);
+        super.push_edge(new_edge, GCMEdge);
+        return new_edge;
     }
 
     set_samples(toSample) {

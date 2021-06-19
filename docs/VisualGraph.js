@@ -387,8 +387,12 @@ class VisualEdge extends GraphEdge {
 
     set_delay(scale) {
         this.delay_scale = scale;
-        this.delay = GraphObj.traverse_delay * scale;
         return this;
+    }
+
+
+    get delay() {
+        return GraphObj.traverse_delay * this.delay_scale;
     }
 
     edge_boundaries() {

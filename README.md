@@ -52,6 +52,7 @@ All graphics are drawn in Vanilla JS using basic rendering on a Canvas Element
 * Additional node types:
   - Probabilistic trigger
   - Symbolic trigger
+  - Conditional trigger 
   - Time To Live state
   - Breakpoint state
 * Graph abstractions

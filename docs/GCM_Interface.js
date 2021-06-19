@@ -177,10 +177,30 @@ const SidebarSelectors = document.querySelectorAll("div[id $= 'selector']");
             EMChoicesContainer.style.display = EMChoicesContainer.style.display === 'flex' ? 'none' : 'flex';
         });
     }
-    // for(const section of ['samples', 'edit-nodes', 'edit-edges']) {
-    //     document.querySelector(`#${section}-selector`).addEventListener('click', () => {
-    //         const EMChoicesContainer = document.querySelector(`#${section}-choices-container`);
-    //         EMChoicesContainer.style.display = EMChoicesContainer.style.display === 'flex' ? 'none' : 'flex';
-    //     });
-    // }
+    generate_test_graph();
 })();
+
+function generate_test_graph() {
+    const sidenav_width = document.getElementById('sidenav-container').clientWidth;
+    const demo_nodes = [
+        new GCMNode(new Coordinate(sidenav_width + 300 + 200 * Math.cos(2 * Math.PI * 0), 300 + 200 * Math.sin(2 * Math.PI * 0), 'sample', id=null, name = 'kick')),
+        new GCMNode(new Coordinate(sidenav_width + 300 + 200 * Math.cos(2 * Math.PI / 4), 300 + 200 * Math.sin(2 * Math.PI / 4), 'sample', id=null, name = 'kick')),
+        new GCMNode(new Coordinate(sidenav_width + 300 + 200 * Math.cos(2 * Math.PI / 2), 300 + 200 * Math.sin(2 * Math.PI / 2), 'sample', id=null, name = 'kick')),
+        new GCMNode(new Coordinate(sidenav_width + 300 + 200 * Math.cos(2 * Math.PI * 3 / 4), 300 + 200 * Math.sin(2 * Math.PI * 3 / 4), 'sample',id=null,  name = 'kick')),
+        new GCMNode(new Coordinate(sidenav_width + 300, 250), 'sample', id=null, name = 'hihat'),
+        new GCMNode(new Coordinate(sidenav_width + 300, 400), 'sample', id=null, name = 'hihat'),
+        new GCMNode(new Coordinate(sidenav_width + 50, 500), 'sample', id=null, name = 'snare'),
+    ];
+
+    demo_nodes.forEach(node => GCM.push_node(node));
+    GCM.create_edge(demo_nodes[0], demo_nodes[1]).set_delay(0.5);
+    GCM.create_edge(demo_nodes[1], demo_nodes[2]).set_delay(0.5);
+    GCM.create_edge(demo_nodes[2], demo_nodes[3]).set_delay(1/6);
+    GCM.create_edge(demo_nodes[3], demo_nodes[0]).set_delay(1/6);
+    GCM.create_edge(demo_nodes[3], demo_nodes[4]).set_delay(1/6);
+    GCM.create_edge(demo_nodes[4], demo_nodes[5]).set_delay(1/4);
+    GCM.create_edge(demo_nodes[2], demo_nodes[6]).set_delay(1);
+
+    // global tempo
+    GraphObj.traverse_delay = 750;
+}
