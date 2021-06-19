@@ -10,7 +10,7 @@ const Styles = {
 
 // Singleton to control the state of the Application
 const GCM = (function() {
-    let graph = new GCMGraph();
+    let graph = new GCMGraph(document.getElementById('canvas'));
 
     /********* STATE CONTROLLER *************/
     
@@ -153,6 +153,8 @@ const GCM = (function() {
 })();
 
 const SampleChoicesContainer = document.querySelector('#samples-choices-container');
+const SidebarSelectors = document.querySelectorAll("div[id $= 'selector']");
+
 (async function sidebar_setup() {
     for (const sample of ['kick', 'snare', 'hihat', 'tom', 'cowbell']) {
         try {
@@ -167,10 +169,18 @@ const SampleChoicesContainer = document.querySelector('#samples-choices-containe
             SampleChoicesContainer.appendChild(new_sample_bar);
         } catch (e) {console.error(e)}
     }
-    for(const section of ['samples', 'edit-nodes', 'edit-edges']) {
-        document.querySelector(`#${section}-selector`).addEventListener('click', () => {
-            const EMChoicesContainer = document.querySelector(`#${section}-choices-container`);
+    for (const section of Array.from(SidebarSelectors)) {
+        const section_title = section.id.replace('-selector', '');
+        console.log(section_title);
+        section.addEventListener('click', () => {
+            const EMChoicesContainer = document.querySelector(`#${section_title}-choices-container`);
             EMChoicesContainer.style.display = EMChoicesContainer.style.display === 'flex' ? 'none' : 'flex';
         });
     }
+    // for(const section of ['samples', 'edit-nodes', 'edit-edges']) {
+    //     document.querySelector(`#${section}-selector`).addEventListener('click', () => {
+    //         const EMChoicesContainer = document.querySelector(`#${section}-choices-container`);
+    //         EMChoicesContainer.style.display = EMChoicesContainer.style.display === 'flex' ? 'none' : 'flex';
+    //     });
+    // }
 })();
