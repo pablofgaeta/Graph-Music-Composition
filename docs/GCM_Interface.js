@@ -9,8 +9,8 @@ const Styles = {
 };
 
 // Singleton to control the state of the Application
-const GCM = (function() {
-    let graph = new GCMGraph(document.getElementById('canvas'));
+const GMC = (function() {
+    let graph = new GMCGraph(document.getElementById('canvas'));
 
     /********* STATE CONTROLLER *************/
     
@@ -162,7 +162,7 @@ const SidebarSelectors = document.querySelectorAll("div[id $= 'selector']");
             AudioFileManager.add(sample, sample_file.url);
             const new_sample_bar = document.createElement('div');
             new_sample_bar.addEventListener('click', () => {
-                GCM.set_samples(sample);
+                GMC.set_samples(sample);
             })
             new_sample_bar.className = 'txt-s section-sub-choice';
             new_sample_bar.innerHTML = `- ${sample}`;
@@ -180,26 +180,46 @@ const SidebarSelectors = document.querySelectorAll("div[id $= 'selector']");
     generate_test_graph();
 })();
 
+function save_graph() {
+    const info = {
+        traverse_delay : GraphObj.traverse_delay,
+        node_info : GMC.nodes.map(node => {
+            return {
+                id : node.id,
+                position : {x : node.position.x, y : node.position.y},
+                name : node.name
+            }}),
+        edge_info : Object.values(GMC.edges).map(edge => {
+            return {
+                parent_id : edge.parent.id,
+                child_id  : edge.child.id,
+                delay_scale : edge.delay_scale
+            }
+        })
+    }
+    console.log(JSON.stringify(info, null, 4));
+}
+
 function generate_test_graph() {
     const sidenav_width = document.getElementById('sidenav-container').clientWidth;
-    const demo_nodes = [
-        new GCMNode(new Coordinate(sidenav_width + 300 + 200 * Math.cos(2 * Math.PI * 0), 300 + 200 * Math.sin(2 * Math.PI * 0), 'sample', id=null, name = 'kick')),
-        new GCMNode(new Coordinate(sidenav_width + 300 + 200 * Math.cos(2 * Math.PI / 4), 300 + 200 * Math.sin(2 * Math.PI / 4), 'sample', id=null, name = 'kick')),
-        new GCMNode(new Coordinate(sidenav_width + 300 + 200 * Math.cos(2 * Math.PI / 2), 300 + 200 * Math.sin(2 * Math.PI / 2), 'sample', id=null, name = 'kick')),
-        new GCMNode(new Coordinate(sidenav_width + 300 + 200 * Math.cos(2 * Math.PI * 3 / 4), 300 + 200 * Math.sin(2 * Math.PI * 3 / 4), 'sample',id=null,  name = 'kick')),
-        new GCMNode(new Coordinate(sidenav_width + 300, 250), 'sample', id=null, name = 'hihat'),
-        new GCMNode(new Coordinate(sidenav_width + 300, 400), 'sample', id=null, name = 'hihat'),
-        new GCMNode(new Coordinate(sidenav_width + 50, 500), 'sample', id=null, name = 'snare'),
-    ];
+    
+    const scale = 200;
+    GMC.create_node(new Coordinate(sidenav_width + 300 + scale * Math.cos(Math.PI * 0 / 2), 300 + scale * Math.sin(Math.PI * 0 / 2), 'sample')).set_sample('kick');
+    GMC.create_node(new Coordinate(sidenav_width + 300 + scale * Math.cos(Math.PI * 1 / 2), 300 + scale * Math.sin(Math.PI * 1 / 2), 'sample')).set_sample('kick');
+    GMC.create_node(new Coordinate(sidenav_width + 300 + scale * Math.cos(Math.PI * 2 / 2), 300 + scale * Math.sin(Math.PI * 2 / 2), 'sample')).set_sample('kick');
+    GMC.create_node(new Coordinate(sidenav_width + 300 + scale * Math.cos(Math.PI * 3 / 2), 300 + scale * Math.sin(Math.PI * 3 / 2), 'sample')).set_sample('kick');
+    GMC.create_node(new Coordinate(sidenav_width + 300, 250), 'sample').set_sample('hihat');
+    GMC.create_node(new Coordinate(sidenav_width + 300, 400), 'sample').set_sample('hihat');
+    GMC.create_node(new Coordinate(sidenav_width + 50, 500), 'sample').set_sample('snare');
 
-    demo_nodes.forEach(node => GCM.push_node(node));
-    GCM.create_edge(demo_nodes[0], demo_nodes[1]).set_delay(0.5);
-    GCM.create_edge(demo_nodes[1], demo_nodes[2]).set_delay(0.5);
-    GCM.create_edge(demo_nodes[2], demo_nodes[3]).set_delay(1/6);
-    GCM.create_edge(demo_nodes[3], demo_nodes[0]).set_delay(1/6);
-    GCM.create_edge(demo_nodes[3], demo_nodes[4]).set_delay(1/6);
-    GCM.create_edge(demo_nodes[4], demo_nodes[5]).set_delay(1/4);
-    GCM.create_edge(demo_nodes[2], demo_nodes[6]).set_delay(1);
+    const demo_nodes = GMC.nodes;
+    GMC.create_edge(demo_nodes[0], demo_nodes[1]).set_delay(0.5);
+    GMC.create_edge(demo_nodes[1], demo_nodes[2]).set_delay(0.5);
+    GMC.create_edge(demo_nodes[2], demo_nodes[3]).set_delay(1/6);
+    GMC.create_edge(demo_nodes[3], demo_nodes[0]).set_delay(1/6);
+    GMC.create_edge(demo_nodes[3], demo_nodes[4]).set_delay(1/6);
+    GMC.create_edge(demo_nodes[4], demo_nodes[5]).set_delay(1/4);
+    GMC.create_edge(demo_nodes[2], demo_nodes[6]).set_delay(1);
 
     // global tempo
     GraphObj.traverse_delay = 750;

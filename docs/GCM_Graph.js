@@ -5,13 +5,26 @@
  * @param {String} type - Accepted types are 'synth' or 'sample'
  * @param {Number} id (optional) - Identifier used to uniquely identify a node
  */
-class GCMNode extends VisualNode {
+class GMCNode extends VisualNode {
     constructor(position, type = 'sample', id = null, name='kick') {
         super(position, id, name);
         this.set_player_type(type);
         this.active = true;
     }
 
+    set_sample(toSample) {
+        if (this.type == 'sample') {
+            try {
+                this.name = toSample;
+                this.player.set_sample(this.name);
+            }
+            catch(err) {
+                console.log(err);
+                console.log(`Could not set samples to : ${toSample}`);
+            }
+        }
+        return this;
+    }
 
     add2container(container) {
         const node_div = document.createElement('div');
@@ -25,34 +38,34 @@ class GCMNode extends VisualNode {
         this.type = type;
         switch(type) {
             case 'synth' :
-                this.player = new GCMSynth();
+                this.player = new GMCSynth();
                 break
             case 'sample' :
-                this.player = new GCMSampler(this.name);
+                this.player = new GMCSampler(this.name);
                 break;
             default :
                 throw type + " is not a supported type.";
         }
     }
 
-    get duration() {
-        return this.player.duration;
-    }
+    get duration() { return this.player.duration; }
 
-    get notes() {
-        return this.player.instrument.notes;
-    }
+    get notes() { return this.player.instrument.notes; }
 
     trigger() {
         this.player.trigger();
     }
 }
 
+class GMCProbabilisticNode extends GMCNode {
 
-class GCMEdge extends VisualEdge {
+}
+
+
+class GMCEdge extends VisualEdge {
     constructor(parent, child, drawing_context) {
-        if (! (parent instanceof GCMNode && child instanceof GCMNode)) {
-            throw "Only accepts GCMNode (or derived classes)";
+        if (! (parent instanceof GMCNode && child instanceof GMCNode)) {
+            throw "Only accepts GMCNode (or derived classes)";
         }
         super(parent, child, drawing_context);
     }
@@ -82,7 +95,7 @@ class GCMEdge extends VisualEdge {
 
 
 
-class GCMGraph extends VisualGraph {
+class GMCGraph extends VisualGraph {
     /**
      * 
      * @param {HTMLCanvasElement} canvas 
@@ -123,38 +136,27 @@ class GCMGraph extends VisualGraph {
     }
 
     /**
-     * Pushes a node to the GCMGraph
-     * @param {GCMNode} parent
+     * Pushes a node to the GMCGraph
+     * @param {GMCNode} parent
      */
     create_node(position, type) {
-        const new_node = new GCMNode(position, type);
-        super.push_node(new_node, GCMNode);
+        const new_node = new GMCNode(position, type);
+        super.push_node(new_node, GMCNode);
         return new_node;
     }
 
     /**
      * Pushes a directed edge and registers key-value mapping by the edge's hash.
-     * @param {GCMEdge} parent
+     * @param {GMCEdge} parent
      */
     create_edge(parent, child) {
-        const new_edge = new GCMEdge(parent, child);
-        super.push_edge(new_edge, GCMEdge);
+        const new_edge = new GMCEdge(parent, child);
+        super.push_edge(new_edge, GMCEdge);
         return new_edge;
     }
 
     set_samples(toSample) {
-        this.selected_nodes.forEach(node => {
-            if (node.type == 'sample') {
-                try {
-                    node.name = toSample;
-                    node.player.set_sample(node.name);
-                }
-                catch(err) {
-                    console.log(err);
-                    console.log(`Could not set samples to : ${toSample}`);
-                }
-            }
-        });
+        this.selected_nodes.forEach(node => node.set_sample(toSample));
         this.draw();
     }
 }
