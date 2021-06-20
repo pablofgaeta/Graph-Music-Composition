@@ -1,3 +1,7 @@
+function bounded(val, min, max) {
+    return val >= min && val <= max;
+}
+
 /**
  * Implementation of GraphNode for 'Graph Music Composition' Visual/Audio App
  * @param {Coordinate} position - Initial position of the node
@@ -6,7 +10,7 @@
  * @param {Number} id (optional) - Identifier used to uniquely identify a node
  */
 class GMCNode extends VisualNode {
-    constructor(position, type = 'sample', id = null, name='kick') {
+    constructor(position, type = 'sample', name = 'kick', id = null) {
         super(position, id, name);
         this.set_player_type(type);
         this.active = true;
@@ -58,7 +62,17 @@ class GMCNode extends VisualNode {
 }
 
 class GMCProbabilisticNode extends GMCNode {
+    constructor(position, p_accept, type = 'sample', name = 'kick', id = null) {
+        if (!bounded(this.p_accept, 0, 1)) throw 'Invalid probability';
+        super(position, type, name, id);
+        this.p_accept = p_accept;
+    }
 
+    trigger() {
+        if (Math.random() < this.p_accept) {
+            this.player.trigger();
+        }
+    }
 }
 
 

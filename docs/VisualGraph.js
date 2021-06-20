@@ -1,6 +1,6 @@
 /**** BASE GRAPH IMPLEMENTATION ****/
 class GraphObj { 
-    static traverse_delay = 500;
+    static traverse_delay = 1000;
     constructor() {
         this.selected = false;
     }
@@ -17,7 +17,7 @@ class GraphObj {
  * @param {*} id (optional) - Unique identifier for the GraphNode
  */
 class GraphNode extends GraphObj {
-    constructor(id = null) {
+    constructor(id) {
         super();
         this.children = [];
         this.selected = false;
@@ -291,7 +291,7 @@ class VisualNode extends GraphNode {
         "idFont" : "Arial"
     }
 
-    constructor(position, id = null, name = id) {
+    constructor(position, id, name = id) {
         super(id);
         if (!(position instanceof Coordinate)) throw "position must be a Coordinate instance";
         this.name = name;
