@@ -224,15 +224,15 @@ let AudioFileManager = (() => {
  *
  * @param {Number} base_frequency - frequency in hz
  */
-class GCMSynth extends AudioPlayer {
+class GMCSynth extends AudioPlayer {
     static default_opts = {
         'base' : 440
     };
 
-    constructor(opts = GCMSynth.default_opts) {
+    constructor(opts = GMCSynth.default_opts) {
         super();
         // Add any new options
-        this.current_ops = {...GCMSynth.default_opts};
+        this.current_ops = {...GMCSynth.default_opts};
         Object.keys(opts).forEach(key => { this.current_ops[key] = opts[key]; });
 
         this.instrument = new AudioController.Synth(opts);
@@ -284,7 +284,7 @@ class GCMSynth extends AudioPlayer {
 }
 
 
-class GCMSampler extends AudioPlayer {
+class GMCSampler extends AudioPlayer {
     constructor(sample) {
         super();
         this.set_sample(sample);
