@@ -182,24 +182,25 @@ class AudioPlayer {
     }
 }
 
-let AudioFileManager = (() => {
+const AudioFileManager = (() => {
     let __urls = {};
 
     let sample_input = document.createElement("input");
     sample_input.type = 'file';
     sample_input.accept = 'audio/*';
     sample_input.multiple = true;
-    sample_input.addEventListener("change", function() {
-        const files = Object.values(this.files);
-        let file;
-        for (let i = 0; i < files.length; ++i) {
-            file = files[i];
-            if ( !Object.keys(__urls).includes(file.name)) {
-                const new_file_url = URL.createObjectURL(file);
-                __urls[file.name] = new Tone.Player(new_file_url).toMaster();
-            }
-        }
-    }, false);
+    // sample_input.addEventListener("change", function() {
+    //     const files = Object.values(this.files);
+    //     let file;
+    //     for (let i = 0; i < files.length; ++i) {
+    //         file = files[i];
+    //         console.log(file);
+    //         if ( !__urls.hasOwnProperty(file.name)) {
+    //             const new_file_url = URL.createObjectURL(file);
+    //             __urls[file.name] = new Tone.Player(new_file_url).toMaster();
+    //         }
+    //     }
+    // }, false);
 
     let importAudio = () => sample_input.click();
 
@@ -216,7 +217,8 @@ let AudioFileManager = (() => {
                 }).toMaster();
             }
         },
-        'importAudio' : importAudio
+        'importAudio' : importAudio,
+        'sample_input' : sample_input
     }
 })();
 
@@ -294,10 +296,8 @@ class GMCSampler extends AudioPlayer {
      * @param {Number} sample_index : Index of loaded samples to use for sampler
     */
     set_sample(sample) {
-        console.log(sample);
         if (AudioFileManager.url_map.hasOwnProperty(sample)) {
             const sample_url = AudioFileManager.url_map[sample];
-            console.log(sample_url);
             this.sampler = new Tone.Player(sample_url).toMaster();
         }
         else {

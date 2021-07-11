@@ -10,7 +10,7 @@ function bounded(val, min, max) {
  * @param {Number} id (optional) - Identifier used to uniquely identify a node
  */
 class GMCNode extends VisualNode {
-    constructor(position, type = 'sample', name = 'kick', id = null) {
+    constructor(position, type = 'sample', id = null, name = 'kick') {
         super(position, id, name);
         this.set_player_type(type);
         this.active = true;
@@ -62,11 +62,15 @@ class GMCNode extends VisualNode {
 }
 
 class GMCProbabilisticNode extends GMCNode {
-    constructor(position, p_accept, type = 'sample', name = 'kick', id = null) {
-        if (!bounded(this.p_accept, 0, 1)) throw 'Invalid probability';
+    constructor(position, p_accept, type = 'sample', id = null, name = 'kick') {
         super(position, type, name, id);
+        if (!bounded(p_accept, 0, 1)) throw 'Invalid probability';
         this.p_accept = p_accept;
     }
+
+    // process_trigger() {
+    //     this.active = Math.random() < this.p_accept;
+    // }
 
     trigger() {
         if (Math.random() < this.p_accept) {
@@ -156,6 +160,12 @@ class GMCGraph extends VisualGraph {
     create_node(position, type) {
         const new_node = new GMCNode(position, type);
         super.push_node(new_node, GMCNode);
+        return new_node;
+    }
+
+    create_pnode(position, p_accept, type) {
+        const new_node = new GMCProbabilisticNode(position, p_accept, type);
+        super.push_node(new_node);
         return new_node;
     }
 

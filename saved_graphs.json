@@ -1,0 +1,706 @@
+{
+    "1" : {
+        "traverse_delay": 750,
+        "node_info": [
+            {
+                "id": 0,
+                "position": {
+                    "x": 755,
+                    "y": 300
+                },
+                "name": "kick"
+            },
+            {
+                "id": 1,
+                "position": {
+                    "x": 556,
+                    "y": 527
+                },
+                "name": "kick"
+            },
+            {
+                "id": 2,
+                "position": {
+                    "x": 355,
+                    "y": 300
+                },
+                "name": "kick"
+            },
+            {
+                "id": 3,
+                "position": {
+                    "x": 555,
+                    "y": 100
+                },
+                "name": "cowbell"
+            },
+            {
+                "id": 4,
+                "position": {
+                    "x": 555,
+                    "y": 250
+                },
+                "name": "hihat"
+            },
+            {
+                "id": 5,
+                "position": {
+                    "x": 555,
+                    "y": 400
+                },
+                "name": "hihat"
+            },
+            {
+                "id": 6,
+                "position": {
+                    "x": 348,
+                    "y": 534
+                },
+                "name": "snare"
+            },
+            {
+                "id": 7,
+                "position": {
+                    "x": 718,
+                    "y": 83
+                },
+                "name": "tom"
+            },
+            {
+                "id": 8,
+                "position": {
+                    "x": 876,
+                    "y": 90
+                },
+                "name": "kick"
+            },
+            {
+                "id": 9,
+                "position": {
+                    "x": 1029,
+                    "y": 165
+                },
+                "name": "kick"
+            }
+        ],
+        "edge_info": [
+            {
+                "parent_id": 0,
+                "child_id": 1,
+                "delay_scale": 0.5
+            },
+            {
+                "parent_id": 1,
+                "child_id": 2,
+                "delay_scale": 0.5
+            },
+            {
+                "parent_id": 3,
+                "child_id": 0,
+                "delay_scale": 0.25
+            },
+            {
+                "parent_id": 3,
+                "child_id": 4,
+                "delay_scale": 0.25
+            },
+            {
+                "parent_id": 4,
+                "child_id": 5,
+                "delay_scale": 0.75
+            },
+            {
+                "parent_id": 2,
+                "child_id": 6,
+                "delay_scale": 1
+            },
+            {
+                "parent_id": 6,
+                "child_id": 3,
+                "delay_scale": 0.6666666666666666
+            },
+            {
+                "parent_id": 3,
+                "child_id": 7,
+                "delay_scale": 0.25
+            },
+            {
+                "parent_id": 7,
+                "child_id": 8,
+                "delay_scale": 0.125
+            },
+            {
+                "parent_id": 8,
+                "child_id": 9,
+                "delay_scale": 0.125
+            },
+            {
+                "parent_id": 7,
+                "child_id": 4,
+                "delay_scale": 1
+            }
+        ]
+    },
+    "rhythm" : {
+        "traverse_delay": 500,
+        "node_info": [
+            {
+                "id": 10,
+                "position": {
+                    "x": 601,
+                    "y": 41
+                },
+                "name": "kick"
+            },
+            {
+                "id": 11,
+                "position": {
+                    "x": 382,
+                    "y": 242
+                },
+                "name": "snare"
+            },
+            {
+                "id": 12,
+                "position": {
+                    "x": 598,
+                    "y": 186
+                },
+                "name": "snare"
+            },
+            {
+                "id": 13,
+                "position": {
+                    "x": 711,
+                    "y": 318
+                },
+                "name": "snare"
+            },
+            {
+                "id": 14,
+                "position": {
+                    "x": 368,
+                    "y": 401
+                },
+                "name": "hihat"
+            },
+            {
+                "id": 15,
+                "position": {
+                    "x": 326,
+                    "y": 84
+                },
+                "name": "hihat"
+            },
+            {
+                "id": 16,
+                "position": {
+                    "x": 664,
+                    "y": 472
+                },
+                "name": "hihat"
+            },
+            {
+                "id": 17,
+                "position": {
+                    "x": 797,
+                    "y": 477
+                },
+                "name": "hihat"
+            },
+            {
+                "id": 19,
+                "position": {
+                    "x": 897,
+                    "y": 57
+                },
+                "name": "hihat"
+            },
+            {
+                "id": 20,
+                "position": {
+                    "x": 810,
+                    "y": 224
+                },
+                "name": "snare"
+            },
+            {
+                "id": 23,
+                "position": {
+                    "x": 905,
+                    "y": 363
+                },
+                "name": "cowbell"
+            },
+            {
+                "id": 24,
+                "position": {
+                    "x": 993,
+                    "y": 277
+                },
+                "name": "cowbell"
+            },
+            {
+                "id": 25,
+                "position": {
+                    "x": 992,
+                    "y": 148
+                },
+                "name": "cowbell"
+            }
+        ],
+        "edge_info": [
+            {
+                "parent_id": 10,
+                "child_id": 12,
+                "delay_scale": 1
+            },
+            {
+                "parent_id": 12,
+                "child_id": 11,
+                "delay_scale": 0.5
+            },
+            {
+                "parent_id": 12,
+                "child_id": 13,
+                "delay_scale": 0.3333333333333333
+            },
+            {
+                "parent_id": 13,
+                "child_id": 16,
+                "delay_scale": 0.1111111111111111
+            },
+            {
+                "parent_id": 13,
+                "child_id": 17,
+                "delay_scale": 0.1
+            },
+            {
+                "parent_id": 11,
+                "child_id": 14,
+                "delay_scale": 0.25
+            },
+            {
+                "parent_id": 11,
+                "child_id": 15,
+                "delay_scale": 0.2
+            },
+            {
+                "parent_id": 10,
+                "child_id": 19,
+                "delay_scale": 0.3333333333333333
+            },
+            {
+                "parent_id": 20,
+                "child_id": 10,
+                "delay_scale": 1.3333333333333333
+            },
+            {
+                "parent_id": 19,
+                "child_id": 20,
+                "delay_scale": 1
+            },
+            {
+                "parent_id": 20,
+                "child_id": 23,
+                "delay_scale": 0.3333333333333333
+            },
+            {
+                "parent_id": 23,
+                "child_id": 24,
+                "delay_scale": 1
+            },
+            {
+                "parent_id": 24,
+                "child_id": 25,
+                "delay_scale": 1
+            }
+        ]
+    },
+    "importAudio" : {
+        "traverse_delay": 500,
+        "node_info": [
+            {
+                "id": 10,
+                "position": {
+                    "x": 601,
+                    "y": 41
+                },
+                "name": "kick"
+            },
+            {
+                "id": 11,
+                "position": {
+                    "x": 382,
+                    "y": 242
+                },
+                "name": "snare"
+            },
+            {
+                "id": 12,
+                "position": {
+                    "x": 592,
+                    "y": 221
+                },
+                "name": "survey-8.mp3"
+            },
+            {
+                "id": 13,
+                "position": {
+                    "x": 711,
+                    "y": 318
+                },
+                "name": "snare"
+            },
+            {
+                "id": 14,
+                "position": {
+                    "x": 368,
+                    "y": 401
+                },
+                "name": "hihat"
+            },
+            {
+                "id": 15,
+                "position": {
+                    "x": 326,
+                    "y": 84
+                },
+                "name": "hihat"
+            },
+            {
+                "id": 16,
+                "position": {
+                    "x": 664,
+                    "y": 472
+                },
+                "name": "hihat"
+            },
+            {
+                "id": 17,
+                "position": {
+                    "x": 797,
+                    "y": 477
+                },
+                "name": "hihat"
+            },
+            {
+                "id": 19,
+                "position": {
+                    "x": 897,
+                    "y": 57
+                },
+                "name": "hihat"
+            },
+            {
+                "id": 20,
+                "position": {
+                    "x": 810,
+                    "y": 224
+                },
+                "name": "snare"
+            },
+            {
+                "id": 23,
+                "position": {
+                    "x": 905,
+                    "y": 363
+                },
+                "name": "cowbell"
+            },
+            {
+                "id": 24,
+                "position": {
+                    "x": 993,
+                    "y": 277
+                },
+                "name": "cowbell"
+            },
+            {
+                "id": 25,
+                "position": {
+                    "x": 992,
+                    "y": 148
+                },
+                "name": "cowbell"
+            },
+            {
+                "id": 13,
+                "position": {
+                    "x": 478,
+                    "y": 476
+                },
+                "name": "survey-9.mp3"
+            },
+            {
+                "id": 14,
+                "position": {
+                    "x": 482,
+                    "y": 315
+                },
+                "name": "survey-27.mp3"
+            },
+            {
+                "id": 15,
+                "position": {
+                    "x": 609,
+                    "y": 606
+                },
+                "name": "survey-8.mp3"
+            },
+            {
+                "id": 16,
+                "position": {
+                    "x": 534,
+                    "y": 820
+                },
+                "name": "survey-8.mp3"
+            },
+            {
+                "id": 17,
+                "position": {
+                    "x": 743,
+                    "y": 719
+                },
+                "name": "hihat"
+            },
+            {
+                "id": 19,
+                "position": {
+                    "x": 713,
+                    "y": 896
+                },
+                "name": "survey-9.mp3"
+            },
+            {
+                "id": 21,
+                "position": {
+                    "x": 820,
+                    "y": 596
+                },
+                "name": "kick"
+            },
+            {
+                "id": 22,
+                "position": {
+                    "x": 899,
+                    "y": 722
+                },
+                "name": "kick"
+            },
+            {
+                "id": 24,
+                "position": {
+                    "x": 969,
+                    "y": 876
+                },
+                "name": "kick"
+            },
+            {
+                "id": 26,
+                "position": {
+                    "x": 401,
+                    "y": 642
+                },
+                "name": "snare"
+            },
+            {
+                "id": 27,
+                "position": {
+                    "x": 184,
+                    "y": 671
+                },
+                "name": "snare"
+            },
+            {
+                "id": 28,
+                "position": {
+                    "x": 160,
+                    "y": 843
+                },
+                "name": "snare"
+            },
+            {
+                "id": 29,
+                "position": {
+                    "x": 138,
+                    "y": 1035
+                },
+                "name": "snare"
+            },
+            {
+                "id": 30,
+                "position": {
+                    "x": 289,
+                    "y": 1026
+                },
+                "name": "snare"
+            },
+            {
+                "id": 31,
+                "position": {
+                    "x": 441,
+                    "y": 1068
+                },
+                "name": "snare"
+            },
+            {
+                "id": 32,
+                "position": {
+                    "x": 432,
+                    "y": 882
+                },
+                "name": "snare"
+            }
+        ],
+        "edge_info": [
+            {
+                "parent_id": 10,
+                "child_id": 12,
+                "delay_scale": 1
+            },
+            {
+                "parent_id": 12,
+                "child_id": 11,
+                "delay_scale": 0.5
+            },
+            {
+                "parent_id": 12,
+                "child_id": 13,
+                "delay_scale": 0.3333333333333333
+            },
+            {
+                "parent_id": 13,
+                "child_id": 16,
+                "delay_scale": 0.1111111111111111
+            },
+            {
+                "parent_id": 13,
+                "child_id": 17,
+                "delay_scale": 0.1
+            },
+            {
+                "parent_id": 11,
+                "child_id": 14,
+                "delay_scale": 0.25
+            },
+            {
+                "parent_id": 11,
+                "child_id": 15,
+                "delay_scale": 0.2
+            },
+            {
+                "parent_id": 10,
+                "child_id": 19,
+                "delay_scale": 0.3333333333333333
+            },
+            {
+                "parent_id": 19,
+                "child_id": 20,
+                "delay_scale": 1
+            },
+            {
+                "parent_id": 20,
+                "child_id": 23,
+                "delay_scale": 0.3333333333333333
+            },
+            {
+                "parent_id": 23,
+                "child_id": 24,
+                "delay_scale": 1
+            },
+            {
+                "parent_id": 24,
+                "child_id": 25,
+                "delay_scale": 1
+            },
+            {
+                "parent_id": 20,
+                "child_id": 13,
+                "delay_scale": 1
+            },
+            {
+                "parent_id": 13,
+                "child_id": 14,
+                "delay_scale": 1
+            },
+            {
+                "parent_id": 14,
+                "child_id": 10,
+                "delay_scale": 1
+            },
+            {
+                "parent_id": 16,
+                "child_id": 15,
+                "delay_scale": 1
+            },
+            {
+                "parent_id": 15,
+                "child_id": 17,
+                "delay_scale": 2
+            },
+            {
+                "parent_id": 17,
+                "child_id": 19,
+                "delay_scale": 1
+            },
+            {
+                "parent_id": 19,
+                "child_id": 16,
+                "delay_scale": 1
+            },
+            {
+                "parent_id": 17,
+                "child_id": 21,
+                "delay_scale": 1
+            },
+            {
+                "parent_id": 21,
+                "child_id": 22,
+                "delay_scale": 0.6666666666666666
+            },
+            {
+                "parent_id": 22,
+                "child_id": 24,
+                "delay_scale": 0.3333333333333333
+            },
+            {
+                "parent_id": 15,
+                "child_id": 26,
+                "delay_scale": 1
+            },
+            {
+                "parent_id": 26,
+                "child_id": 27,
+                "delay_scale": 1
+            },
+            {
+                "parent_id": 27,
+                "child_id": 28,
+                "delay_scale": 1
+            },
+            {
+                "parent_id": 28,
+                "child_id": 29,
+                "delay_scale": 0.5
+            },
+            {
+                "parent_id": 29,
+                "child_id": 30,
+                "delay_scale": 0.5
+            },
+            {
+                "parent_id": 30,
+                "child_id": 31,
+                "delay_scale": 0.3333333333333333
+            },
+            {
+                "parent_id": 31,
+                "child_id": 32,
+                "delay_scale": 0.6666666666666666
+            }
+        ]
+    }
+}
+
+

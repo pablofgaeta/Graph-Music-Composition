@@ -122,6 +122,10 @@ class Graph extends GraphObj{
         return this.nodes.every(node => node.selected); 
     }
 
+    node_by_id(id) {
+        return this.nodes.filter(node => node.id == id)[0];
+    }
+
     /**
      * @returns Array of selected nodes
      */
@@ -298,6 +302,10 @@ class VisualNode extends GraphNode {
         this.position = position;
         this.active = true;
         this.animating = false;
+    }
+
+    process_trigger() {
+        // default trigger. Do nothing
     }
 
     toString() {
@@ -546,6 +554,7 @@ class VisualGraph extends Graph {
      * Triggers the given node and all edges sprouting from that node.
      */
     flood_trigger(node) {
+        node.process_trigger();
         // Prevent playing when traversing is disabled
         if (!node.active) return;
 

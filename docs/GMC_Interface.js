@@ -152,34 +152,6 @@ const GMC = (function() {
     return graph;
 })();
 
-const SampleChoicesContainer = document.querySelector('#samples-choices-container');
-const SidebarSelectors = document.querySelectorAll("div[id $= 'selector']");
-
-(async function sidebar_setup() {
-    for (const sample of ['kick', 'snare', 'hihat', 'tom', 'cowbell']) {
-        try {
-            const sample_file = await fetch(`./Resources/drums/${sample}.wav`);
-            AudioFileManager.add(sample, sample_file.url);
-            const new_sample_bar = document.createElement('div');
-            new_sample_bar.addEventListener('click', () => {
-                GMC.set_samples(sample);
-            })
-            new_sample_bar.className = 'txt-s section-sub-choice';
-            new_sample_bar.innerHTML = `- ${sample}`;
-            SampleChoicesContainer.appendChild(new_sample_bar);
-        } catch (e) {console.error(e)}
-    }
-    for (const section of Array.from(SidebarSelectors)) {
-        const section_title = section.id.replace('-selector', '');
-        console.log(section_title);
-        section.addEventListener('click', () => {
-            const EMChoicesContainer = document.querySelector(`#${section_title}-choices-container`);
-            EMChoicesContainer.style.display = EMChoicesContainer.style.display === 'flex' ? 'none' : 'flex';
-        });
-    }
-    generate_test_graph();
-})();
-
 function save_graph() {
     const info = {
         traverse_delay : GraphObj.traverse_delay,
@@ -200,6 +172,33 @@ function save_graph() {
     console.log(JSON.stringify(info, null, 4));
 }
 
+async function load_graph(graph) {
+    const res = await fetch('../saved_graphs.json');
+    const saved_graphs = await res.json();
+
+    if (saved_graphs.hasOwnProperty(graph)) {
+        const target = saved_graphs[graph];
+        console.log(target);
+
+        target.node_info.forEach(({id, position : pos, name}) => {
+            const new_node = GMC.create_node(new Coordinate(pos.x, pos.y), 'sample').set_sample(name);
+            new_node.id = id;
+        });
+        
+        target.edge_info.forEach(({parent_id, child_id, delay_scale}) => {
+            const parent = GMC.node_by_id(parent_id);
+            const child = GMC.node_by_id(child_id);
+
+            const new_edge = GMC.create_edge(parent, child);
+            new_edge.set_delay(delay_scale);
+        });
+
+        GraphObj.traverse_delay = target.traverse_delay;
+    } else {
+        console.log("failed to load json");
+    }
+}
+
 function generate_test_graph() {
     const sidenav_width = document.getElementById('sidenav-container').clientWidth;
     
@@ -212,15 +211,86 @@ function generate_test_graph() {
     GMC.create_node(new Coordinate(sidenav_width + 300, 400), 'sample').set_sample('hihat');
     GMC.create_node(new Coordinate(sidenav_width + 50, 500), 'sample').set_sample('snare');
 
-    const demo_nodes = GMC.nodes;
-    GMC.create_edge(demo_nodes[0], demo_nodes[1]).set_delay(0.5);
-    GMC.create_edge(demo_nodes[1], demo_nodes[2]).set_delay(0.5);
-    GMC.create_edge(demo_nodes[2], demo_nodes[3]).set_delay(1/6);
-    GMC.create_edge(demo_nodes[3], demo_nodes[0]).set_delay(1/6);
-    GMC.create_edge(demo_nodes[3], demo_nodes[4]).set_delay(1/6);
-    GMC.create_edge(demo_nodes[4], demo_nodes[5]).set_delay(1/4);
-    GMC.create_edge(demo_nodes[2], demo_nodes[6]).set_delay(1);
+    GMC.create_edge(GMC.nodes[0], GMC.nodes[1]).set_delay(0.5);
+    GMC.create_edge(GMC.nodes[1], GMC.nodes[2]).set_delay(0.5);
+    GMC.create_edge(GMC.nodes[2], GMC.nodes[3]).set_delay(1/6);
+    GMC.create_edge(GMC.nodes[3], GMC.nodes[0]).set_delay(1/8);
+    GMC.create_edge(GMC.nodes[3], GMC.nodes[4]).set_delay(1/6);
+    GMC.create_edge(GMC.nodes[4], GMC.nodes[5]).set_delay(1/4);
+    GMC.create_edge(GMC.nodes[2], GMC.nodes[6]).set_delay(1);
+
+
+    GMC.create_node(new Coordinate(600,600), 'sample');
+    GMC.create_pnode(new Coordinate(600, 800), 0.9, 'sample').set_sample('hihat');
+    GMC.create_node(new Coordinate(800, 800), 'sample').set_sample('snare');
+
+    GMC.create_edge(GMC.nodes[7], GMC.nodes[8]);
+    GMC.create_edge(GMC.nodes[8], GMC.nodes[9]);
+    GMC.create_edge(GMC.nodes[9], GMC.nodes[7]);
+
 
     // global tempo
-    GraphObj.traverse_delay = 750;
+    GraphObj.traverse_delay = 500;
 }
+
+const SampleChoicesContainer = document.querySelector('#samples-choices-container');
+const SidebarSelectors = document.querySelectorAll("div[id $= 'selector']");
+const SampleUpload = document.querySelector('#samples-upload');
+
+function appendSampleBar(filename) {
+    const new_sample_bar = document.createElement('div');
+    new_sample_bar.addEventListener('click', () => {
+        GMC.set_samples(filename);
+    })
+    new_sample_bar.className = 'txt-s section-sub-choice clickable';
+    new_sample_bar.innerHTML = `- ${filename}`;
+    SampleChoicesContainer.appendChild(new_sample_bar);
+}
+
+async function uploadSample(filename) {
+    try {
+        const basename_matches = filename.match(/^.*\/(.*)[.][^./]+$/);
+        let basename;
+        if (basename_matches.length == 2) {
+            basename = basename_matches[1];
+        } else {
+            throw "Invalid file format. Must match /^.*\/(.*)[.][^.]+$/";
+        }
+        const sample_file = await fetch(filename);
+        AudioFileManager.add(basename, sample_file.url);
+        appendSampleBar(basename);
+    } catch (e) {console.error(e)}
+}
+
+(async function sidebar_setup() {
+    for (const sample of ['kick', 'snare', 'hihat', 'tom', 'cowbell']) {
+        await uploadSample(`./Resources/drums/${sample}.wav`);
+    }
+
+    SampleUpload.addEventListener('click', () => {
+        const old_files = AudioFileManager.url_map;
+        AudioFileManager.importAudio();
+        AudioFileManager.sample_input.addEventListener("change", function() {
+            const files = Object.values(this.files);
+            for (let i = 0; i < files.length; ++i) {
+                let file = files[i];
+                if ( !old_files.hasOwnProperty(file.name)) {
+                    console.log("loading:",file.name);
+                    const new_file_url = URL.createObjectURL(file);
+                    AudioFileManager.url_map[file.name] = new_file_url;
+                    appendSampleBar(file.name);
+                }
+            }
+        }, false);
+    });
+
+    for (const section of Array.from(SidebarSelectors)) {
+        const section_title = section.id.replace('-selector', '');
+        section.addEventListener('click', () => {
+            const EMChoicesContainer = document.querySelector(`#${section_title}-choices-container`);
+            EMChoicesContainer.style.display = EMChoicesContainer.style.display === 'flex' ? 'none' : 'flex';
+        });
+    }
+    // generate_test_graph();
+    load_graph('rhythm');
+})();
