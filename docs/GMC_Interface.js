@@ -247,41 +247,41 @@ function appendSampleBar(filename) {
     SampleChoicesContainer.appendChild(new_sample_bar);
 }
 
-async function uploadSample(filename) {
+function basename(filename, dir_sep = '/') {
+    const basename = filename.substring(filename.lastIndexOf(dir_sep) + 1);
+    const ext_idx = basename.lastIndexOf('.');
+    if (ext_idx !== -1) { return basename.substring(0, ext_idx); }
+    return basename;
+}
+
+async function uploadSample(filename, url) {
     try {
-        const basename_matches = filename.match(/^.*\/(.*)[.][^./]+$/);
-        let basename;
-        if (basename_matches.length == 2) {
-            basename = basename_matches[1];
-        } else {
-            throw "Invalid file format. Must match /^.*\/(.*)[.][^.]+$/";
-        }
-        const sample_file = await fetch(filename);
-        AudioFileManager.add(basename, sample_file.url);
-        appendSampleBar(basename);
+        const filebase = basename(filename);
+        AudioFileManager.add(filebase, url);
+        appendSampleBar(filebase);
     } catch (e) {console.error(e)}
 }
 
 (async function sidebar_setup() {
+    // Auto import initial samples
     for (const sample of ['kick', 'snare', 'hihat', 'tom', 'cowbell']) {
-        await uploadSample(`./Resources/drums/${sample}.wav`);
+        const sample_path = `./Resources/drums/${sample}.wav`;
+        const sample_file = await fetch(sample_path);
+        await uploadSample(sample_path, sample_file.url);
     }
 
-    SampleUpload.addEventListener('click', () => {
-        const old_files = AudioFileManager.url_map;
-        AudioFileManager.importAudio();
-        AudioFileManager.sample_input.addEventListener("change", function() {
-            const files = Object.values(this.files);
-            for (let i = 0; i < files.length; ++i) {
-                let file = files[i];
-                if ( !old_files.hasOwnProperty(file.name)) {
-                    console.log("loading:",file.name);
-                    const new_file_url = URL.createObjectURL(file);
-                    AudioFileManager.url_map[file.name] = new_file_url;
-                    appendSampleBar(file.name);
-                }
+    // Handle dynamic uploads
+    AudioFileManager.sample_input.addEventListener("change", function() {
+        Object.values(this.files).forEach(async (new_file) => {
+            if ( !AudioFileManager.file2url.hasOwnProperty(new_file.name) ) {
+                const new_file_url = URL.createObjectURL(new_file);
+                await uploadSample(new_file.name, new_file_url);
             }
-        }, false);
+        })
+    }, false);
+
+    SampleUpload.addEventListener('click', () => {
+        AudioFileManager.sample_input.click();
     });
 
     for (const section of Array.from(SidebarSelectors)) {

@@ -182,45 +182,62 @@ class AudioPlayer {
     }
 }
 
-const AudioFileManager = (() => {
-    let __urls = {};
+class AFM {
+    constructor() {
+        this.file2url = {};
 
-    let sample_input = document.createElement("input");
-    sample_input.type = 'file';
-    sample_input.accept = 'audio/*';
-    sample_input.multiple = true;
-    // sample_input.addEventListener("change", function() {
-    //     const files = Object.values(this.files);
-    //     let file;
-    //     for (let i = 0; i < files.length; ++i) {
-    //         file = files[i];
-    //         console.log(file);
-    //         if ( !__urls.hasOwnProperty(file.name)) {
-    //             const new_file_url = URL.createObjectURL(file);
-    //             __urls[file.name] = new Tone.Player(new_file_url).toMaster();
-    //         }
-    //     }
-    // }, false);
-
-    let importAudio = () => sample_input.click();
-
-    return {
-        url_map : __urls,
-        get files() { return Object.keys(__urls)   },
-        get urls()  { return Object.values(__urls) },
-        add : (filename, url) => { __urls[filename] = url; },
-        play : (filename) => {
-            if(__urls.hasOwnProperty(filename)) {
-                const single_player = new Tone.Player({
-                    url : __urls[filename],
-                    autostart : true
-                }).toMaster();
-            }
-        },
-        'importAudio' : importAudio,
-        'sample_input' : sample_input
+        this.sample_input = document.createElement("input");
+        this.sample_input.type = 'file';
+        this.sample_input.accept = 'audio/*';
+        this.sample_input.multiple = true;
     }
-})();
+
+    get files() { return Object.keys(this.file2url);   }
+    get urls()  { return Object.values(this.file2url); }
+
+    add(filename, url) {
+        this.file2url[filename] = this.file2url[filename] || url;
+    }
+    
+    play(filename) {
+        if (this.file2url.hasOwnProperty(filename)) {
+            new Tone.Player({
+                url: this.file2url[filename],
+                autostart: true
+            }).toMaster();
+        }
+    }
+};
+
+const AudioFileManager = new AFM();
+
+// const AudioFileManager = (() => {
+//     let __urls = {};
+
+//     let sample_input = document.createElement("input");
+//     sample_input.type = 'file';
+//     sample_input.accept = 'audio/*';
+//     sample_input.multiple = true;
+
+//     let importAudio = () => sample_input.click();
+
+//     return {
+//         url_map : __urls,
+//         get files() { return Object.keys(__urls)   },
+//         get urls()  { return Object.values(__urls) },
+//         add : (filename, url) => { __urls[filename] = url; },
+//         play : (filename) => {
+//             if(__urls.hasOwnProperty(filename)) {
+//                 const single_player = new Tone.Player({
+//                     url : __urls[filename],
+//                     autostart : true
+//                 }).toMaster();
+//             }
+//         },
+//         'importAudio' : importAudio,
+//         'sample_input' : sample_input
+//     }
+// })();
 
 /**
  *
@@ -296,8 +313,8 @@ class GMCSampler extends AudioPlayer {
      * @param {Number} sample_index : Index of loaded samples to use for sampler
     */
     set_sample(sample) {
-        if (AudioFileManager.url_map.hasOwnProperty(sample)) {
-            const sample_url = AudioFileManager.url_map[sample];
+        if (AudioFileManager.file2url.hasOwnProperty(sample)) {
+            const sample_url = AudioFileManager.file2url[sample];
             this.sampler = new Tone.Player(sample_url).toMaster();
         }
         else {
