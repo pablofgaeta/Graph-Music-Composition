@@ -211,34 +211,6 @@ class AFM {
 
 const AudioFileManager = new AFM();
 
-// const AudioFileManager = (() => {
-//     let __urls = {};
-
-//     let sample_input = document.createElement("input");
-//     sample_input.type = 'file';
-//     sample_input.accept = 'audio/*';
-//     sample_input.multiple = true;
-
-//     let importAudio = () => sample_input.click();
-
-//     return {
-//         url_map : __urls,
-//         get files() { return Object.keys(__urls)   },
-//         get urls()  { return Object.values(__urls) },
-//         add : (filename, url) => { __urls[filename] = url; },
-//         play : (filename) => {
-//             if(__urls.hasOwnProperty(filename)) {
-//                 const single_player = new Tone.Player({
-//                     url : __urls[filename],
-//                     autostart : true
-//                 }).toMaster();
-//             }
-//         },
-//         'importAudio' : importAudio,
-//         'sample_input' : sample_input
-//     }
-// })();
-
 /**
  *
  * @param {Number} base_frequency - frequency in hz
